@@ -72,6 +72,21 @@ class Cell(object):
                 return True
         return False
 
+    def predictWithThreshold(self, activatedCells, threshold):
+        for d in self.dendrites:
+            connectedSynapses = (d > self.connectedPermanence).astype(np.int)
+            if np.sum(connectedSynapses * activatedCells) > threshold:
+                return True
+        return False
+
+    def getPredictionValue(self, activatedCells):
+        predictionValue = []
+        for d in self.dendrites:
+            connectedSynapses = (d > self.connectedPermanence).astype(np.int)
+            pv = np.sum(connectedSynapses * activatedCells)
+            predictionValue.append(pv)
+        return max(predictionValue)
+
     def applyMask(self, mask):
         for i, d in enumerate(self.dendrites):
             activeSynapses = (d>0).astype(np.float)

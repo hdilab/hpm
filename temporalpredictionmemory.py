@@ -25,6 +25,7 @@ Model a single temporal prediction layer
 import numpy as np
 from cell import Cell, RandomModule
 from collections import deque
+import math
 
 DEBUG = True # Print lots of information
 
@@ -112,28 +113,58 @@ class TemporalPredictionMemory(object):
 
     def activate(self, input):
         self.activatedCells = np.full(self.activatedCells.shape, False)
+        numActivatedCells = 0
+        numActivatedColumns = 0
         for columnIndex in input:
             tempActivated = False
             for cellIndex, cell in enumerate(self.columns[columnIndex]):
                 if self.predictedCells[columnIndex, cellIndex]:
                     self.activatedCells[columnIndex, cellIndex] = True
                     tempActivated = True
+                    numActivatedCells += 1
             if not tempActivated:
                 self.burst(columnIndex)
+            else:
+                numActivatedColumns += 1
+
+        if DEBUG:
+            print("Total Number of Activated Cells: ", numActivatedCells)
+            print("Total Number of Activated Columns: ", numActivatedColumns)
 
     def burst(self, columnIndex):
         for cellIndex, cell in enumerate(self.columns[columnIndex]):
             self.activatedCells[columnIndex, cellIndex] = True
 
     def predict(self):
+        numPredictionCell = 0
+        pv = []
         for columnIndex, column in enumerate(self.columns):
-            columnPrediction = False
+            for cellIndex, cell in enumerate(column):
+                p = \
+                    self.columns[columnIndex][cellIndex].getPredictionValue(self.activatedCells)
+                pv.append(p)
+
+        pv.sort(reverse=True)
+        index = math.floor(len(pv) * 0.01)
+        threshold = pv[index]
+
+        for columnIndex, column in enumerate(self.columns):
+            columnPrediction: bool = False
             for cellIndex, cell in enumerate(column):
                 self.predictedCells[columnIndex,cellIndex] = \
-                    self.columns[columnIndex][cellIndex].predict(self.activatedCells)
+                    self.columns[columnIndex][cellIndex].predictWithThreshold(self.activatedCells, threshold)
                 if self.predictedCells[columnIndex, cellIndex]:
                     columnPrediction = True
+                    numPredictionCell += 1
             self.predictedColumns[columnIndex] = columnPrediction
+        if DEBUG:
+            numPredictionColumn = 0
+            for column in self.predictedColumns:
+                if column:
+                    numPredictionColumn += 1
+            print("Number of Predicted cells: ", numPredictionCell)
+            print("Number of Predicted columns: ", numPredictionColumn)
+
 
 
 
