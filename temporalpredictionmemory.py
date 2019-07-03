@@ -70,6 +70,7 @@ class TemporalPredictionMemory(object):
         self.cellsPerColumn = cellsPerColumn
         self.updateWeight = updateWeight
         self.predictedColumns = np.full((numColumn), False)
+        self.iteration = 0
 
         for i in range(numColumn):
             column = []
@@ -88,6 +89,10 @@ class TemporalPredictionMemory(object):
 
 
     def feedForward(self):
+        print("====================================")
+        print("Iteration: ", self.iteration)
+        print("====================================")
+        self.iteration += 1
         inputChar, inputSDR = self.feeder.feed()
         # Print predicted output char
         self.feeder.evaluatePrediction(inputChar, self.predictedColumns)
