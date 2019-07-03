@@ -55,7 +55,7 @@ class TemporalPredictionMemory(object):
                  seed=42,
                  feeder=None,
                  numHistory=4,
-                 updateWeight=0.2):
+                 updateWeight=0.02):
         self.feeder = feeder
         randomModule = RandomModule(seed=seed,
                                     numColumn=numColumn,
@@ -169,6 +169,9 @@ class TemporalPredictionMemory(object):
                     numPredictionColumn += 1
             print("Number of Predicted cells: ", numPredictionCell)
             print("Number of Predicted columns: ", numPredictionColumn)
+
+            if numPredictionCell == 0:
+                print("No cell predicted")
 
 
 
