@@ -139,7 +139,7 @@ class TemporalPredictionMemory(object):
 
     def update(self):
         updateMask = self.historyActivatedCells[3] * self.updateWeight
-        updateMask = updateMask + self.historyActivatedCells[2] * self.updateWeight * (-1.25)
+        updateMask = updateMask + self.historyActivatedCells[2] * self.updateWeight * (-0.8)
         updateMask = updateMask + self.historyActivatedCells[1] * self.updateWeight * (-0.5)
         updateMask = updateMask + self.historyActivatedCells[0] * self.updateWeight * (-0.25)
         self.historyActivatedCells.popleft()

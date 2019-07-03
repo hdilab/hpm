@@ -82,7 +82,11 @@ class TXTFeeder(Feeder):
 
     def evaluatePrediction(self, inputChar, prediction):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]
-        scores = [s for s in scores if s[1] > 8]
+        if DEBUG:
+            scores.sort(key=lambda x:x[1])
+            for i, score in scores:
+                print("Scores:", chr(i), score)
+        scores = [s for s in scores if s[1] > 4]
         scores.sort(key=lambda x: x[1])
         print("Input: ", inputChar)
         for i, score in scores:
