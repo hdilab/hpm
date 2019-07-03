@@ -29,6 +29,8 @@ from txtfeeder import TXTFeeder
 import time
 import pickle
 
+LOAD_MODEL = False
+
 start = time.time()
 
 # Some constants for the experiment
@@ -44,7 +46,12 @@ L1feeder = TXTFeeder("short.txt",
                      numOnBits=NUM_SDR_ON_BIT,
                      seed=RANDOM_SEED)
 
-L1 = TemporalPredictionMemory(cellsPerColumn=8,
+if LOAD_MODEL:
+    f = open("model.pkl",'rb')
+    L1 = pickle.load(f)
+    f.close()
+else:
+    L1 = TemporalPredictionMemory(cellsPerColumn=8,
                                activationThreshold=45,
                                connectedPermanence=0.5,
                                numColumn =NUM_SDR_BIT,
@@ -52,7 +59,7 @@ L1 = TemporalPredictionMemory(cellsPerColumn=8,
                                feeder=L1feeder)
 
 for i in range(1000000):
-    if i%1000 == 0:
+    if i%1000 == 999:
         pickle.dump(L1, open("model.pkl","wb"))
         print("###### iteration ######", i)
         end = time.time()

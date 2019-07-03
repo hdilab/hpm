@@ -26,7 +26,7 @@ import numpy as np
 from cell import Cell, RandomModule
 from collections import deque
 
-
+DEBUG = True # Print lots of information
 
 
 class TemporalPredictionMemory(object):
@@ -104,9 +104,9 @@ class TemporalPredictionMemory(object):
                     activeSynapses = d[d>0]
                     num_activeSynapses += activeSynapses.size
                     sum_activeSynapses += np.sum(activeSynapses)
-
-        print("Total Active Synapses: ", num_activeSynapses)
-        print("Average Synaptic weight: ", sum_activeSynapses*1.0/num_activeSynapses)
+        if DEBUG:
+            print("Total Active Synapses: ", num_activeSynapses)
+            print("Average Synaptic weight: ", sum_activeSynapses*1.0/num_activeSynapses)
 
 
 
@@ -147,11 +147,11 @@ class TemporalPredictionMemory(object):
         if len(updateMask[updateMask<0]) > 0 :
             uniques = np.unique(updateMask)
             uniques_count = {u:len(updateMask[updateMask==u]) for u in uniques}
-            for u in uniques:
-                # print(u, uniques_count[u])
-                pass
 
-            # print("Total update: ", sum(u*uniques_count[u] for u in uniques_count))
+            if DEBUG:
+                for u in uniques:
+                    print(u, uniques_count[u])
+                print("Total update: ", sum(u*uniques_count[u] for u in uniques_count))
 
         for columnIndex, column in enumerate(self.columns):
             for cellIndex, cell in enumerate(column):

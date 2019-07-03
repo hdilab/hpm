@@ -34,9 +34,14 @@ def feedforward()
     self.predict(input)
 """
 
+
 from feeder import Feeder
 from SDR import SDR
 import numpy as np
+
+
+DEBUG = True # Will print lots of information
+
 
 class TXTFeeder(Feeder):
     """
@@ -81,8 +86,8 @@ class TXTFeeder(Feeder):
         scores.sort(key=lambda x: x[1])
         print("Input: ", inputChar)
         for i, score in scores:
-            print("\tPrediction:", chr(i), score)
-            pass
+            if DEBUG:
+                print("\tPrediction:", chr(i), score)
 
     def getMatch(self, i, prediction):
         return np.sum(prediction[self.char_sdr.getSDR(chr(i))].astype(np.int))
