@@ -93,6 +93,21 @@ class TemporalPredictionMemory(object):
         self.activate(inputSDR)
         self.update()
         self.predict()
+        self.printStatistics()
+
+    def printStatistics(self):
+        num_activeSynapses = 0
+        sum_activeSynapses = 0
+        for column in self.columns:
+            for cell in column:
+                for d in cell.dendrites:
+                    activeSynapses = d[d>0]
+                    num_activeSynapses += activeSynapses.size
+                    sum_activeSynapses += np.sum(activeSynapses)
+
+        print("Total Active Synapses: ", num_activeSynapses)
+        print("Average Synaptic weight: ", sum_activeSynapses*1.0/num_activeSynapses)
+
 
 
     def activate(self, input):
@@ -133,9 +148,10 @@ class TemporalPredictionMemory(object):
             uniques = np.unique(updateMask)
             uniques_count = {u:len(updateMask[updateMask==u]) for u in uniques}
             for u in uniques:
-                print(u, uniques_count[u])
+                # print(u, uniques_count[u])
+                pass
 
-            print("Total update: ", sum(u*uniques_count[u] for u in uniques_count))
+            # print("Total update: ", sum(u*uniques_count[u] for u in uniques_count))
 
         for columnIndex, column in enumerate(self.columns):
             for cellIndex, cell in enumerate(column):

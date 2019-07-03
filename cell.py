@@ -73,7 +73,11 @@ class Cell(object):
         return False
 
     def applyMask(self, mask):
-        for d in self.dendrites:
-            activeSynapes = (d>0).astype(np.float)
-            d = (d + mask) * activeSynapes
+        for i, d in enumerate(self.dendrites):
+            activeSynapses = (d>0).astype(np.float)
+            d = (d + mask) * activeSynapses
+            d = np.minimum(d, np.ones(d.shape))
+            self.dendrites[i] = d
+
+
 
