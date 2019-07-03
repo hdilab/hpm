@@ -81,7 +81,7 @@ class TXTFeeder(Feeder):
         scores.sort(key=lambda x: x[1])
         print("Input: ", inputChar)
         for i, score in scores:
-            # print("\tPrediction:", chr(i), score)
+            print("\tPrediction:", chr(i), score)
             pass
 
     def getMatch(self, i, prediction):
