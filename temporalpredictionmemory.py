@@ -75,7 +75,9 @@ class TemporalPredictionMemory(object):
         for i in range(numColumn):
             column = []
             for j in range(cellsPerColumn):
-                cell = Cell(dendritesPerCell=dendritesPerCell,
+                cell = Cell(
+                            i,
+                            dendritesPerCell=dendritesPerCell,
                             randomModule=randomModule,
                             activationThreshold=activationThreshold,
                             connectedPermanence=connectedPermanence
@@ -159,7 +161,7 @@ class TemporalPredictionMemory(object):
                 pv.append(p)
 
         pv.sort(reverse=True)
-        index = math.floor(len(pv) * 0.01)
+        index = math.floor(len(pv) * 0.04)
         threshold = pv[index]
 
         for columnIndex, column in enumerate(self.columns):

@@ -35,8 +35,10 @@ class RandomModule(object):
         self.numColumn = numColumn
         self.cellsPerColumn = cellsPerColumn
 
-    def getRandomPermance(self):
-        return np.random.rand(self.numColumn, self.cellsPerColumn)
+    def getRandomPermance(self, column):
+        weights = np.random.rand(self.numColumn, self.cellsPerColumn)
+        weights[column, :] = -1
+        return weights
 
 
 class Cell(object):
@@ -55,6 +57,7 @@ class Cell(object):
     """
 
     def __init__(self,
+                 column,
                  dendritesPerCell=2,
                  randomModule=None,
                  activationThreshold=5,
@@ -62,8 +65,9 @@ class Cell(object):
         self.activationThreshold = activationThreshold
         self.connectedPermanence = connectedPermanence
         self.dendrites = []
+        self.column = column
         for d in range(dendritesPerCell):
-            self.dendrites.append(randomModule.getRandomPermance())
+            self.dendrites.append(randomModule.getRandomPermance(self.column))
 
     def predict(self, activatedCells):
         for d in self.dendrites:
