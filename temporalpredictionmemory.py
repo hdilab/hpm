@@ -208,7 +208,7 @@ class TemporalPredictionMemory(object):
                     updateMask = self.historyActivatedCells * self.updateWeight * (-0.01)
 
                 cell.applyMask(updateMask)
-                self.historyActivatedCells = self.activatedCells
+        self.historyActivatedCells = self.activatedCells
 
 
 
