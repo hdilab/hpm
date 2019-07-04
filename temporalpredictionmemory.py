@@ -83,8 +83,10 @@ class TemporalPredictionMemory(object):
                 column.append(cell)
             self.columns.append(column)
 
-        for i in range(numHistory):
-            self.historyActivatedCells.append(np.full((numColumn, cellsPerColumn), False))
+
+        # for i in range(numHistory):
+        #     self.historyActivatedCells.append(np.full((numColumn, cellsPerColumn), False))
+            self.historyActivatedCells = np.full((numColumn, cellsPerColumn), False)
 
 
 
@@ -97,8 +99,8 @@ class TemporalPredictionMemory(object):
         # Print predicted output char
         self.feeder.evaluatePrediction(inputChar, self.predictedColumns)
         self.activate(inputSDR)
-        self.update()
         self.predict()
+        self.update()
         self.printStatistics()
 
     def printStatistics(self):
@@ -118,23 +120,30 @@ class TemporalPredictionMemory(object):
 
     def activate(self, input):
         self.activatedCells = np.full(self.activatedCells.shape, False)
-        numActivatedCells = 0
-        numActivatedColumns = 0
+        numPredictedActivatedCells = 0
+        numPredictedActivatedColumns = 0
+        numBurstCells = 0
+        numBurstColumns = 0
         for columnIndex in input:
             tempActivated = False
             for cellIndex, cell in enumerate(self.columns[columnIndex]):
                 if self.predictedCells[columnIndex, cellIndex]:
                     self.activatedCells[columnIndex, cellIndex] = True
                     tempActivated = True
-                    numActivatedCells += 1
+                    numPredictedActivatedCells += 1
             if not tempActivated:
                 self.burst(columnIndex)
+                numBurstCells += len(self.columns[columnIndex])
+                numBurstColumns += 1
             else:
-                numActivatedColumns += 1
+                numPredictedActivatedColumns += 1
 
         if DEBUG:
-            print("Total Number of Activated Cells: ", numActivatedCells)
-            print("Total Number of Activated Columns: ", numActivatedColumns)
+            print("Total Number of Predicted and Activated Cells: ", numPredictedActivatedCells)
+            print("Total Number of Predicted and Activated Columns: ", numPredictedActivatedColumns)
+
+            print("Total Number of Burst Cells: ", numBurstCells)
+            print("Total Number of Burst Columns: ", numBurstColumns)
 
     def burst(self, columnIndex):
         for cellIndex, cell in enumerate(self.columns[columnIndex]):
@@ -173,24 +182,20 @@ class TemporalPredictionMemory(object):
             if numPredictionCell == 0:
                 print("No cell predicted")
 
-
-
-
     def update(self):
         for columnIndex, column in enumerate(self.columns):
             for cellIndex, cell in enumerate(column):
                 if self.activatedCells[columnIndex, cellIndex]:
                     # Currently activated cell case
                     # increase the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells[3] * self.updateWeight
+                    updateMask = self.historyActivatedCells * self.updateWeight
                 else:
                     # Currently not activated cell case
                     # decrease the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells[3] * self.updateWeight * (-1.0)
+                    updateMask = self.historyActivatedCells * self.updateWeight * (-1.0)
 
                 cell.applyMask(updateMask)
-                self.historyActivatedCells.popleft()
-                self.historyActivatedCells.append(self.activatedCells)
+                self.historyActivatedCells = self.activatedCells
 
 
 
