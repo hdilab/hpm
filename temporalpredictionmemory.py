@@ -55,7 +55,7 @@ class TemporalPredictionMemory(object):
                  seed=42,
                  feeder=None,
                  numHistory=4,
-                 updateWeight=0.1):
+                 updateWeight=0.2):
         self.feeder = feeder
         randomModule = RandomModule(seed=seed,
                                     numColumn=numColumn,
@@ -96,7 +96,13 @@ class TemporalPredictionMemory(object):
         print("====================================")
         print("Iteration: ", self.iteration)
         print("====================================")
+
+        if self.iteration == 14:
+            print("Stopping at iteration")
+
+
         self.iteration += 1
+
         inputChar, inputSDR = self.feeder.feed()
         # Print predicted output char
         self.feeder.evaluatePrediction(inputChar, self.predictedColumns)
@@ -156,9 +162,10 @@ class TemporalPredictionMemory(object):
         pv = []
         for columnIndex, column in enumerate(self.columns):
             for cellIndex, cell in enumerate(column):
-                p = \
-                    self.columns[columnIndex][cellIndex].getPredictionValue(self.activatedCells)
-                pv.append(p)
+                if not self.activatedCells[columnIndex, cellIndex]:
+                    p = \
+                        self.columns[columnIndex][cellIndex].getPredictionValue(self.activatedCells)
+                    pv.append(p)
 
         pv.sort(reverse=True)
         index = math.floor(len(pv) * 0.04)
@@ -169,14 +176,13 @@ class TemporalPredictionMemory(object):
             for cellIndex, cell in enumerate(column):
                 maskedActivatedCells = np.copy( self.activatedCells )
 
-                for ci in range(len(column)):
-                    maskedActivatedCells[columnIndex, ci] = False
+                if not self.activatedCells[columnIndex,cellIndex]:
 
-                self.predictedCells[columnIndex,cellIndex] = \
-                    self.columns[columnIndex][cellIndex].predictWithThreshold(maskedActivatedCells, threshold)
-                if self.predictedCells[columnIndex, cellIndex]:
-                    columnPrediction = True
-                    numPredictionCell += 1
+                    self.predictedCells[columnIndex,cellIndex] = \
+                        self.columns[columnIndex][cellIndex].predictWithThreshold(maskedActivatedCells, threshold)
+                    if self.predictedCells[columnIndex, cellIndex]:
+                        columnPrediction = True
+                        numPredictionCell += 1
             self.predictedColumns[columnIndex] = columnPrediction
         if DEBUG:
             numPredictionColumn = 0
