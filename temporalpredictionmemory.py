@@ -177,25 +177,20 @@ class TemporalPredictionMemory(object):
 
 
     def update(self):
-        updateMask = self.historyActivatedCells[3] * self.updateWeight
-        updateMask = updateMask + self.historyActivatedCells[2] * self.updateWeight * (-0.8)
-        updateMask = updateMask + self.historyActivatedCells[1] * self.updateWeight * (-0.5)
-        updateMask = updateMask + self.historyActivatedCells[0] * self.updateWeight * (-0.25)
-        self.historyActivatedCells.popleft()
-        self.historyActivatedCells.append(self.activatedCells)
-        if len(updateMask[updateMask<0]) > 0 :
-            uniques = np.unique(updateMask)
-            uniques_count = {u:len(updateMask[updateMask==u]) for u in uniques}
-
-            if DEBUG:
-                for u in uniques:
-                    print(u, uniques_count[u])
-                print("Total update: ", sum(u*uniques_count[u] for u in uniques_count))
-
         for columnIndex, column in enumerate(self.columns):
             for cellIndex, cell in enumerate(column):
-                cell.applyMask(updateMask)
+                if self.activatedCells[columnIndex, cellIndex]:
+                    # Currently activated cell case
+                    # increase the synapses that connect previously activated cells and currently activated cells
+                    updateMask = self.historyActivatedCells[3] * self.updateWeight
+                else:
+                    # Currently not activated cell case
+                    # decrease the synapses that connect previously activated cells and currently activated cells
+                    updateMask = self.historyActivatedCells[3] * self.updateWeight * (-1.0)
 
+                cell.applyMask(updateMask)
+                self.historyActivatedCells.popleft()
+                self.historyActivatedCells.append(self.activatedCells)
 
 
 
