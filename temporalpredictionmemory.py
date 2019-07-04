@@ -27,7 +27,7 @@ from cell import Cell, RandomModule
 from collections import deque
 import math
 
-DEBUG = True # Print lots of information
+DEBUG = False # Print lots of information
 
 
 class TemporalPredictionMemory(object):
@@ -71,6 +71,7 @@ class TemporalPredictionMemory(object):
         self.updateWeight = updateWeight
         self.predictedColumns = np.full((numColumn), False)
         self.iteration = 0
+        self.results = []
 
         for i in range(numColumn):
             column = []
@@ -85,10 +86,7 @@ class TemporalPredictionMemory(object):
                 column.append(cell)
             self.columns.append(column)
 
-
-        # for i in range(numHistory):
-        #     self.historyActivatedCells.append(np.full((numColumn, cellsPerColumn), False))
-            self.historyActivatedCells = np.full((numColumn, cellsPerColumn), False)
+        self.historyActivatedCells = np.full((numColumn, cellsPerColumn), False)
 
 
 
@@ -96,22 +94,19 @@ class TemporalPredictionMemory(object):
         print("====================================")
         print("Iteration: ", self.iteration)
         print("====================================")
-
-        if self.iteration == 14:
-            print("Stopping at iteration")
-
-
         self.iteration += 1
 
         inputChar, inputSDR = self.feeder.feed()
         # Print predicted output char
-        self.feeder.evaluatePrediction(inputChar, self.predictedColumns)
+        self.results.append(self.feeder.evaluatePrediction(inputChar, self.predictedColumns))
         self.activate(inputSDR)
         self.predict()
         self.update()
         self.printStatistics()
 
     def printStatistics(self):
+        accuracy = np.sum(self.results[:100])/len(self.results[:100])
+        print ("Average Accuracy in last 100 items: ", "{:.2%}".format(accuracy))
         num_activeSynapses = 0
         sum_activeSynapses = 0
         for column in self.columns:

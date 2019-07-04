@@ -84,10 +84,19 @@ class TXTFeeder(Feeder):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]
         # scores = [s for s in scores if s[1] > 4]
         scores.sort(key=lambda x: x[1],reverse=True)
-        print("Input: ", inputChar)
+        # print("Input: ", inputChar)
+        predChars = ""
+        hit = False
         for i, score in scores[:5]:
-            if DEBUG:
-                print("\tPrediction:", chr(i), score)
+            newChar = chr(i) + " : " + str(score) + " , "
+            predChars += newChar
+            if inputChar == chr(i):
+                hit = True
+        print("Input: ", inputChar, "Prediction: ", predChars)
+        if hit:
+            return 1.0
+        else:
+            return 0.0
 
     def getMatch(self, i, prediction):
         return np.sum(prediction[self.char_sdr.getSDR(chr(i))].astype(np.int))
