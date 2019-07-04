@@ -55,7 +55,7 @@ class TemporalPredictionMemory(object):
                  seed=42,
                  feeder=None,
                  numHistory=4,
-                 updateWeight=0.02):
+                 updateWeight=0.1):
         self.feeder = feeder
         randomModule = RandomModule(seed=seed,
                                     numColumn=numColumn,
