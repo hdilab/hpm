@@ -165,8 +165,13 @@ class TemporalPredictionMemory(object):
         for columnIndex, column in enumerate(self.columns):
             columnPrediction: bool = False
             for cellIndex, cell in enumerate(column):
+                maskedActivatedCells = np.copy( self.activatedCells )
+
+                for ci in range(len(column)):
+                    maskedActivatedCells[columnIndex, ci] = False
+
                 self.predictedCells[columnIndex,cellIndex] = \
-                    self.columns[columnIndex][cellIndex].predictWithThreshold(self.activatedCells, threshold)
+                    self.columns[columnIndex][cellIndex].predictWithThreshold(maskedActivatedCells, threshold)
                 if self.predictedCells[columnIndex, cellIndex]:
                     columnPrediction = True
                     numPredictionCell += 1
@@ -192,7 +197,7 @@ class TemporalPredictionMemory(object):
                 else:
                     # Currently not activated cell case
                     # decrease the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells * self.updateWeight * (-1.0)
+                    updateMask = self.historyActivatedCells * self.updateWeight * (-0.01)
 
                 cell.applyMask(updateMask)
                 self.historyActivatedCells = self.activatedCells
