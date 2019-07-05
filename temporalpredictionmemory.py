@@ -26,8 +26,11 @@ import numpy as np
 from cell import Cell, RandomModule
 from collections import deque
 import math
+import pickle
 
 DEBUG = False # Print lots of information
+
+PRINT_LOG = True # Will print the log of the accuracy
 
 
 class TemporalPredictionMemory(object):
@@ -90,6 +93,9 @@ class TemporalPredictionMemory(object):
 
 
 
+
+
+
     def feedForward(self):
         print("====================================")
         print("Iteration: ", self.iteration)
@@ -106,7 +112,13 @@ class TemporalPredictionMemory(object):
 
     def printStatistics(self):
         accuracy = np.sum(self.results[-100:])/len(self.results[-100:])
+
         print ("Average Accuracy in last 100 items: ", "{:.2%}".format(accuracy))
+
+        if PRINT_LOG:
+            if self.iteration%100:
+                pickle.dump(self.results, open("results.pkl", "wb"))
+
         num_activeSynapses = 0
         sum_activeSynapses = 0
         for column in self.columns:
