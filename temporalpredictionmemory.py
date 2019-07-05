@@ -105,7 +105,7 @@ class TemporalPredictionMemory(object):
         self.printStatistics()
 
     def printStatistics(self):
-        accuracy = np.sum(self.results[:100])/len(self.results[:100])
+        accuracy = np.sum(self.results[-100:])/len(self.results[-100:])
         print ("Average Accuracy in last 100 items: ", "{:.2%}".format(accuracy))
         num_activeSynapses = 0
         sum_activeSynapses = 0
