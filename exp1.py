@@ -41,7 +41,7 @@ RANDOM_SEED = 42
 NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
 
-L1feeder = TXTFeeder("short.txt",
+L1feeder = TXTFeeder("1342.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
                      seed=RANDOM_SEED)
