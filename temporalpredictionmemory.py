@@ -58,7 +58,7 @@ class TemporalPredictionMemory(object):
                  seed=42,
                  feeder=None,
                  numHistory=4,
-                 updateWeight=0.2):
+                 updateWeight=0.02):
         self.feeder = feeder
         randomModule = RandomModule(seed=seed,
                                     numColumn=numColumn,
@@ -212,7 +212,7 @@ class TemporalPredictionMemory(object):
                 else:
                     # Currently not activated cell case
                     # decrease the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells * self.updateWeight * (-0.01)
+                    updateMask = self.historyActivatedCells * self.updateWeight * (-0.0001)
 
                 cell.applyMask(updateMask)
         self.historyActivatedCells = self.activatedCells

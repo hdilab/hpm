@@ -1,5 +1,6 @@
 .idea/
 model.pkl
+results.pkl
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
