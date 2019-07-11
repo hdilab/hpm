@@ -24,12 +24,9 @@ Model a single temporal prediction layer
 
 import numpy as np
 from cell import Cell, RandomModule
-from collections import deque
-import math
 import pickle
 
-DEBUG = False # Print lots of information
-
+DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
 
 
@@ -50,29 +47,28 @@ class TemporalPredictionMemory(object):
 
     def __init__(self,
                  cellsPerColumn=8,
-                 dendritesPerCell=16,
-                 synapsesPerDendrite=32,
+                 dendritesPerCell=32,
                  activationThreshold=100,
                  connectedPermanence=0.5,
                  numColumn=512,
                  seed=42,
                  feeder=None,
-                 numHistory=4,
-                 updateWeight=0.02):
+                 updateWeight=0.1):
+        
         self.feeder = feeder
         randomModule = RandomModule(seed=seed,
                                     numColumn=numColumn,
                                     cellsPerColumn=cellsPerColumn)
-
+        self.numColumn = numColumn
         self.columns = []
+        self.burstedColumns = np.full(numColumn, False)
         self.predictedCells = np.full((numColumn, cellsPerColumn), False)
         self.activatedCells = np.full((numColumn, cellsPerColumn), False)
-        self.energyCells = np.full((numColumn, cellsPerColumn), 1.0)
-        self.historyActivatedCells = deque()
-        self.numColumn = numColumn
-        self.cellsPerColumn = cellsPerColumn
+        self.previousPredictedCells = np.full((numColumn, cellsPerColumn), False)
+        
         self.updateWeight = updateWeight
-        self.predictedColumns = np.full((numColumn), False)
+        self.predictedColumns = np.full(numColumn, False)
+
         self.iteration = 0
         self.results = []
 
@@ -84,26 +80,26 @@ class TemporalPredictionMemory(object):
                             dendritesPerCell=dendritesPerCell,
                             randomModule=randomModule,
                             activationThreshold=activationThreshold,
-                            connectedPermanence=connectedPermanence
+                            connectedPermanence=connectedPermanence,
+                            updateWeight=updateWeight
                             )
                 column.append(cell)
             self.columns.append(column)
 
-        self.historyActivatedCells = np.full((numColumn, cellsPerColumn), False)
 
 
 
 
-
-
-    def feedForward(self):
+    def printHeader(self):
         print("====================================")
         print("Iteration: ", self.iteration)
         print("====================================")
         self.iteration += 1
 
+
+    def feedForward(self):
+        self.printHeader()
         inputChar, inputSDR = self.feeder.feed()
-        # Print predicted output char
         self.results.append(self.feeder.evaluatePrediction(inputChar, self.predictedColumns))
         self.activate(inputSDR)
         self.predict()
@@ -131,23 +127,24 @@ class TemporalPredictionMemory(object):
             print("Total Active Synapses: ", num_activeSynapses)
             print("Average Synaptic weight: ", sum_activeSynapses*1.0/num_activeSynapses)
 
-
-
     def activate(self, input):
         self.activatedCells = np.full(self.activatedCells.shape, False)
         numPredictedActivatedCells = 0
         numPredictedActivatedColumns = 0
         numBurstCells = 0
         numBurstColumns = 0
+
+        self.burstedColumns = np.full(self.numColumn, False)
         for columnIndex in input:
-            tempActivated = False
+            columnActivated = False
             for cellIndex, cell in enumerate(self.columns[columnIndex]):
                 if self.predictedCells[columnIndex, cellIndex]:
                     self.activatedCells[columnIndex, cellIndex] = True
-                    tempActivated = True
+                    columnActivated = True
                     numPredictedActivatedCells += 1
-            if not tempActivated:
+            if not columnActivated:
                 self.burst(columnIndex)
+                self.burstedColumns[columnIndex] = True
                 numBurstCells += len(self.columns[columnIndex])
                 numBurstColumns += 1
             else:
@@ -166,27 +163,13 @@ class TemporalPredictionMemory(object):
 
     def predict(self):
         numPredictionCell = 0
-        pv = []
+        self.previousPredictedCells = np.copy(self.predictedCells)
         for columnIndex, column in enumerate(self.columns):
+            columnPrediction = False
             for cellIndex, cell in enumerate(column):
-                if not self.activatedCells[columnIndex, cellIndex]:
-                    p = \
-                        self.columns[columnIndex][cellIndex].getPredictionValue(self.activatedCells)
-                    pv.append(p)
-
-        pv.sort(reverse=True)
-        index = math.floor(len(pv) * 0.04)
-        threshold = pv[index]
-
-        for columnIndex, column in enumerate(self.columns):
-            columnPrediction: bool = False
-            for cellIndex, cell in enumerate(column):
-                maskedActivatedCells = np.copy( self.activatedCells )
-
                 if not self.activatedCells[columnIndex,cellIndex]:
-
                     self.predictedCells[columnIndex,cellIndex] = \
-                        self.columns[columnIndex][cellIndex].predictWithThreshold(maskedActivatedCells, threshold)
+                        self.columns[columnIndex][cellIndex].predict(self.activatedCells)
                     if self.predictedCells[columnIndex, cellIndex]:
                         columnPrediction = True
                         numPredictionCell += 1
@@ -204,18 +187,30 @@ class TemporalPredictionMemory(object):
 
     def update(self):
         for columnIndex, column in enumerate(self.columns):
-            for cellIndex, cell in enumerate(column):
-                if self.activatedCells[columnIndex, cellIndex]:
-                    # Currently activated cell case
-                    # increase the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells * self.updateWeight
-                else:
-                    # Currently not activated cell case
-                    # decrease the synapses that connect previously activated cells and currently activated cells
-                    updateMask = self.historyActivatedCells * self.updateWeight * (-0.0001)
+            if self.burstedColumns[columnIndex]:
+                self.strengthenCandidateDendriteForColumn(column)
+            else:
+                for cellIndex, cell in enumerate(column):
+                    if self.previousPredictedCells[columnIndex, cellIndex]:
+                        if self.activatedCells[columnIndex, cellIndex]:
+                            cell.strenthenActivatedDendrites(self.activatedCells)
+                        else:
+                            cell.weakenActivatedDendrites(self.activatedCells)
 
-                cell.applyMask(updateMask)
-        self.historyActivatedCells = self.activatedCells
+    def strengthenCandidateDendriteForColumn(self, column):
+        """
+        Find the candidate Dendrite from all cells in the column and strengthen it
+        :param column:
+        :return:
+        """
+        maxPrediction = -1
+        for cellIndex, cell in enumerate(column):
+            prediction = cell.getPredictionValue(self.activatedCells)
+            if prediction > maxPrediction:
+                maxPrediction = prediction
+                maxCell = cell
+        maxCell.strengthenMaximumDendrite(self.activatedCells)
+
 
 
 

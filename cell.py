@@ -36,8 +36,23 @@ class RandomModule(object):
         self.cellsPerColumn = cellsPerColumn
 
     def getRandomPermance(self, column):
-        weights = np.random.rand(self.numColumn, self.cellsPerColumn)
+        """
+        We use gaussian distribution to get synapse weight
+        If it is less than 0 it means they are permanently not connected.
+        About half of the cells will be permanently disconnected
+        We use standard deviation to be 0.15. The reason is when we
+        calculate how many cells are connected from the beginning
+        the following fomula gives us about 20, which looks reasonable
+        np.sum(np.random.randn(2042,32)*0.15 > 0.5)
+        stdPermanence is the design parameter we need to tune
+        Finally we remove the connection that is within same column
+        :param column:
+        :return:
+        """
+        stdPermanence = 0.15
+        weights = np.random.randn(self.numColumn, self.cellsPerColumn) * stdPermanence
         weights[column, :] = -1
+        weights = np.minimum(weights, 1)
         return weights
 
 
@@ -61,42 +76,66 @@ class Cell(object):
                  dendritesPerCell=2,
                  randomModule=None,
                  activationThreshold=5,
-                 connectedPermanence=0.5):
+                 connectedPermanence=0.5,
+                 updateWeight=0.1):
         self.activationThreshold = activationThreshold
         self.connectedPermanence = connectedPermanence
         self.dendrites = []
         self.column = column
+        self.updateWeight=updateWeight
         for d in range(dendritesPerCell):
             self.dendrites.append(randomModule.getRandomPermance(self.column))
 
     def predict(self, activatedCells):
         for d in self.dendrites:
-            connectedSynapses = (d > self.connectedPermanence).astype(np.int)
-            if np.sum(connectedSynapses * activatedCells) > self.activationThreshold:
+            if self.predictDendrite(d, activatedCells):
                 return True
         return False
 
-    def predictWithThreshold(self, activatedCells, threshold):
-        for d in self.dendrites:
-            connectedSynapses = (d > self.connectedPermanence).astype(np.int)
-            if np.sum(connectedSynapses * activatedCells) > threshold:
-                return True
-        return False
+    def predictDendrite(self, d, activatedCells):
+        connectedSynapses = (d > self.connectedPermanence).astype(np.int)
+        if np.sum(connectedSynapses * activatedCells) > self.activationThreshold:
+            return True
+        else:
+            return False
+
+    def getDendritePredictionValue(self, d, activatedCells):
+        connectedSynapses = (d > self.connectedPermanence).astype(np.int)
+        return np.sum(connectedSynapses * activatedCells)
+
 
     def getPredictionValue(self, activatedCells):
         predictionValue = []
         for d in self.dendrites:
-            connectedSynapses = (d > self.connectedPermanence).astype(np.int)
-            pv = np.sum(connectedSynapses * activatedCells)
-            predictionValue.append(pv)
+            predictionValue.append(self.getDendritePredictionValue(d, activatedCells))
         return max(predictionValue)
 
-    def applyMask(self, mask):
-        for i, d in enumerate(self.dendrites):
-            activeSynapses = (d>0).astype(np.float)
-            d = (d + mask) * activeSynapses
-            d = np.minimum(d, np.ones(d.shape))
-            self.dendrites[i] = d
+    def strenthenActivatedDendrites(self, activatedCells):
+        for d in self.dendrites:
+            if self.predictDendrite(d, activatedCells):
+                self.strengthenDendrite(d)
+
+    def strengthenDendrite(self, d, activatedCells):
+        enabledSynapses = (d > 0)
+        d += enabledSynapses * activatedCells * self.updateWeight \
+             - enabledSynapses * np.invert(activatedCells) * self.updateWeight * 0.1
+        d = np.minimum(d, 1)
+
+    def weakenActivatedDendrites(self, activatedCells):
+        for d in self.dendrites:
+            if self.predictDendrite(d, activatedCells):
+                d -= activatedCells * self.updateWeight * 0.01
+
+    def strengthenMaximumDendrite(self, activatedCells):
+        prediction = []
+        for d in self.dendrites:
+            prediction.append((d, self.getDendritePredictionValue(d, activatedCells)))
+        prediction.sort(key=lambda i:i[1], reverse=True)
+        self.strengthenDendrite(prediction[0][0],activatedCells)
+
+
+
+
 
 
 

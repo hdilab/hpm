@@ -41,7 +41,7 @@ RANDOM_SEED = 42
 NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
 
-L1feeder = TXTFeeder("short.txt",
+L1feeder = TXTFeeder("shorter.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
                      seed=RANDOM_SEED)
@@ -52,7 +52,7 @@ if LOAD_MODEL:
     f.close()
 else:
     L1 = TemporalPredictionMemory(cellsPerColumn=8,
-                               activationThreshold=55,
+                               activationThreshold=15,
                                connectedPermanence=0.5,
                                numColumn =NUM_SDR_BIT,
                                seed=RANDOM_SEED,
