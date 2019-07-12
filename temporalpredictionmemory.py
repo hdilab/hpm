@@ -65,6 +65,7 @@ class TemporalPredictionMemory(object):
         self.predictedCells = np.full((numColumn, cellsPerColumn), False)
         self.activatedCells = np.full((numColumn, cellsPerColumn), False)
         self.previousPredictedCells = np.full((numColumn, cellsPerColumn), False)
+        self.previousActivatedCells = np.full((numColumn, cellsPerColumn), False)
         
         self.updateWeight = updateWeight
         self.predictedColumns = np.full(numColumn, False)
@@ -128,6 +129,7 @@ class TemporalPredictionMemory(object):
             print("Average Synaptic weight: ", sum_activeSynapses*1.0/num_activeSynapses)
 
     def activate(self, input):
+        self.previousActivatedCells = np.copy(self.activatedCells)
         self.activatedCells = np.full(self.activatedCells.shape, False)
         numPredictedActivatedCells = 0
         numPredictedActivatedColumns = 0
@@ -164,15 +166,16 @@ class TemporalPredictionMemory(object):
     def predict(self):
         numPredictionCell = 0
         self.previousPredictedCells = np.copy(self.predictedCells)
+
         for columnIndex, column in enumerate(self.columns):
             columnPrediction = False
             for cellIndex, cell in enumerate(column):
-                if not self.activatedCells[columnIndex,cellIndex]:
-                    self.predictedCells[columnIndex,cellIndex] = \
-                        self.columns[columnIndex][cellIndex].predict(self.activatedCells)
-                    if self.predictedCells[columnIndex, cellIndex]:
-                        columnPrediction = True
-                        numPredictionCell += 1
+                # if not self.activatedCells[columnIndex,cellIndex]:
+                self.predictedCells[columnIndex,cellIndex] = \
+                    self.columns[columnIndex][cellIndex].predict(self.activatedCells)
+                if self.predictedCells[columnIndex, cellIndex]:
+                    columnPrediction = True
+                    numPredictionCell += 1
             self.predictedColumns[columnIndex] = columnPrediction
         if DEBUG:
             numPredictionColumn = 0
@@ -193,9 +196,9 @@ class TemporalPredictionMemory(object):
                 for cellIndex, cell in enumerate(column):
                     if self.previousPredictedCells[columnIndex, cellIndex]:
                         if self.activatedCells[columnIndex, cellIndex]:
-                            cell.strenthenActivatedDendrites(self.activatedCells)
+                            cell.strenthenActivatedDendrites(self.previousActivatedCells)
                         else:
-                            cell.weakenActivatedDendrites(self.activatedCells)
+                            cell.weakenActivatedDendrites(self.previousActivatedCells)
 
     def strengthenCandidateDendriteForColumn(self, column):
         """
@@ -205,11 +208,17 @@ class TemporalPredictionMemory(object):
         """
         maxPrediction = -1
         for cellIndex, cell in enumerate(column):
-            prediction = cell.getPredictionValue(self.activatedCells)
+            prediction = cell.getPredictionValue(self.previousActivatedCells)
             if prediction > maxPrediction:
                 maxPrediction = prediction
                 maxCell = cell
-        maxCell.strengthenMaximumDendrite(self.activatedCells)
+                maxCellIndex = cellIndex
+
+        # if DEBUG:
+        #     print("Maximum candidate dendrite match value is : ", maxPrediction)
+        #     print("Maximum candidate cell is : ", maxCellIndex)
+
+        maxCell.strengthenMaximumDendrite(self.previousActivatedCells)
 
 
 

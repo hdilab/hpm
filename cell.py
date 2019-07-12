@@ -43,13 +43,13 @@ class RandomModule(object):
         We use standard deviation to be 0.15. The reason is when we
         calculate how many cells are connected from the beginning
         the following fomula gives us about 20, which looks reasonable
-        np.sum(np.random.randn(2042,32)*0.15 > 0.5)
+        np.sum(np.random.randn(512,8)*0.2 > 0.5)
         stdPermanence is the design parameter we need to tune
         Finally we remove the connection that is within same column
         :param column:
         :return:
         """
-        stdPermanence = 0.15
+        stdPermanence = 0.3
         weights = np.random.randn(self.numColumn, self.cellsPerColumn) * stdPermanence
         weights[column, :] = -1
         weights = np.minimum(weights, 1)
@@ -97,6 +97,7 @@ class Cell(object):
         if np.sum(connectedSynapses * activatedCells) > self.activationThreshold:
             return True
         else:
+            # print("Dendrite Predict: ",np.sum(connectedSynapses * activatedCells) )
             return False
 
     def getDendritePredictionValue(self, d, activatedCells):
@@ -113,7 +114,7 @@ class Cell(object):
     def strenthenActivatedDendrites(self, activatedCells):
         for d in self.dendrites:
             if self.predictDendrite(d, activatedCells):
-                self.strengthenDendrite(d)
+                self.strengthenDendrite(d, activatedCells)
 
     def strengthenDendrite(self, d, activatedCells):
         enabledSynapses = (d > 0)
