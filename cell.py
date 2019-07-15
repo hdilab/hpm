@@ -119,13 +119,13 @@ class Cell(object):
     def strengthenDendrite(self, d, activatedCells):
         enabledSynapses = (d > 0)
         d += enabledSynapses * activatedCells * self.updateWeight \
-             - enabledSynapses * np.invert(activatedCells) * self.updateWeight * 0.1
+             - enabledSynapses * np.invert(activatedCells) * self.updateWeight * 0.5
         d = np.minimum(d, 1)
 
     def weakenActivatedDendrites(self, activatedCells):
         for d in self.dendrites:
             if self.predictDendrite(d, activatedCells):
-                d -= activatedCells * self.updateWeight * 0.01
+                d -= activatedCells * self.updateWeight * 0.2
 
     def strengthenMaximumDendrite(self, activatedCells):
         prediction = []
