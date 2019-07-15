@@ -113,7 +113,7 @@ class TemporalPredictionMemory(object):
         print ("Average Accuracy in last 100 items: ", "{:.2%}".format(accuracy))
 
         if PRINT_LOG:
-            if self.iteration%100:
+            if self.iteration == 30:
                 pickle.dump(self.results, open("results.pkl", "wb"))
 
         num_activeSynapses = 0

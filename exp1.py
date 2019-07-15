@@ -52,7 +52,7 @@ if LOAD_MODEL:
     f.close()
 else:
     L1 = TemporalPredictionMemory(cellsPerColumn=8,
-                               activationThreshold=15,
+                               activationThreshold=7,
                                connectedPermanence=0.5,
                                numColumn =NUM_SDR_BIT,
                                seed=RANDOM_SEED,
