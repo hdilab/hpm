@@ -25,13 +25,13 @@ Model a single temporal prediction layer
 import numpy as np
 import pickle
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-6', comment='Overlapping case Use previous actual-input as context')
+writer = SummaryWriter('runs/exp-7', comment='Overlapping case Use previous actual-input as context')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
 
-NUM_WEIGHT_DEC = -0.03
-NUM_WEIGHT_INC = 0.3
+NUM_WEIGHT_DEC = -0.05
+NUM_WEIGHT_INC = 0.4
 
 
 class HeterarchicalPredictionMemory(object):
@@ -117,6 +117,8 @@ class HeterarchicalPredictionMemory(object):
         self.accuracy = 0.99*self.accuracy + 0.01*accuracy
         if self.iteration %100 == 0:
             print("Iteration: \t", self.iteration, "Accuracy: \t", self.accuracy)
+
+            writer.add_scalar('accuracy/numSDR'+ self.name, len(actual), self.iteration)
             writer.add_scalar('accuracy/acc'+ self.name, self.accuracy, self.iteration)
             writer.add_scalar('weights/mean'+ self.name, np.mean(self.weights), self.iteration)
             writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
