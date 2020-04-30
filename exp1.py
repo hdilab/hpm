@@ -59,13 +59,20 @@ else:
     L1 = HeterarchicalPredictionMemory(sizeSDR=NUM_SDR_BIT,
                                        numOnBits=NUM_SDR_ON_BIT,
                                        seed=RANDOM_SEED,
-                                       lower=L1feeder
+                                       lower=L1feeder,
+                                       name="L1"
+                                       )
+    L2 = HeterarchicalPredictionMemory(sizeSDR=NUM_SDR_BIT,
+                                       numOnBits=NUM_SDR_ON_BIT,
+                                       seed=RANDOM_SEED,
+                                       lower=L1,
+                                       name="L2"
                                        )
 
 population = [i for  i in range(NUM_SDR_BIT)]
 randomSDR = random.sample(population, NUM_SDR_ON_BIT)
 
-for i in range(1000000):
+for i in range(10000):
     if i%1000 == 999 and SAVE_MODEL:
         pickle.dump(L1, open("model.pkl","wb"))
         print("###### iteration ######", i)
@@ -73,6 +80,6 @@ for i in range(1000000):
         elasped = end - start
         print(time.strftime("%H:%M:%S", time.gmtime(elasped)))
 
-    L1.feed(randomSDR)
+    L2.feed(randomSDR)
 
 

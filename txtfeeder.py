@@ -83,7 +83,7 @@ class TXTFeeder(Feeder):
             self.readIndex = -1
         inputChar = self.char_list[self.readIndex]
         inputSDR = self.char_sdr.getNoisySDR(inputChar)
-        return inputChar, inputSDR
+        return inputSDR
 
     def evaluatePrediction(self, inputChar, prediction):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]

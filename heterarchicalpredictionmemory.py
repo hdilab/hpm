@@ -25,7 +25,7 @@ Model a single temporal prediction layer
 import numpy as np
 import pickle
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
+writer = SummaryWriter('runs/exp-4', comment='Two layer, Non-overlapping text')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -54,7 +54,8 @@ class HeterarchicalPredictionMemory(object):
                  numOnBits=10,
                  seed=42,
                  lower=None,
-                 dropbout=0.5):
+                 dropbout=0.5,
+                 name="layer"):
         
         self.lower = lower
         np.random.seed(seed)
@@ -66,6 +67,7 @@ class HeterarchicalPredictionMemory(object):
         self.sizeSDR = sizeSDR
         self.prevDropout = np.zeros(self.weights.shape)
         self.accuracy = 0
+        self.name=name
 
     def printHeader(self):
         print("====================================")
@@ -81,7 +83,7 @@ class HeterarchicalPredictionMemory(object):
             if self.iteration == 4000:
                 print("debug")
             pred = self.predict(input)
-            char, actual = self.lower.feed(pred)
+            actual = self.lower.feed(pred)
             self.evaluate(pred, actual)
             self.update(input, actual)
             self.prevActual = actual
@@ -104,8 +106,8 @@ class HeterarchicalPredictionMemory(object):
         result = result[:self.numOnBits]
         resultDict = {str(i):result[i] for i in range(self.numOnBits)}
         # writer.add_scalars('predict/predict_group', resultDict, self.iteration)
-        writer.add_scalar('predict/predict_mean', np.mean(result), self.iteration)
-        writer.add_scalar('predict/predict_std', np.std(result), self.iteration)
+        writer.add_scalar('predict/predict_mean' + self.name, np.mean(result), self.iteration)
+        writer.add_scalar('predict/predict_std'+ self.name, np.std(result), self.iteration)
         output = (-output).argsort()[:self.numOnBits]
         return output
 
@@ -115,10 +117,10 @@ class HeterarchicalPredictionMemory(object):
         self.accuracy = 0.99*self.accuracy + 0.01*accuracy
         if self.iteration %100 == 0:
             print("Iteration: \t", self.iteration, "Accuracy: \t", self.accuracy)
-            writer.add_scalar('accuracy/acc', self.accuracy, self.iteration)
-            writer.add_scalar('weights/mean', np.mean(self.weights), self.iteration)
-            writer.add_scalar('weights/std', np.std(self.weights), self.iteration)
-            writer.add_histogram('weights', self.weights, self.iteration)
+            writer.add_scalar('accuracy/acc'+ self.name, self.accuracy, self.iteration)
+            writer.add_scalar('weights/mean'+ self.name, np.mean(self.weights), self.iteration)
+            writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
+            writer.add_histogram(self.name + 'weights', self.weights, self.iteration)
 
     def update(self, input, actual):
         decMask = np.zeros(self.weights.shape)
@@ -132,7 +134,11 @@ class HeterarchicalPredictionMemory(object):
 
     def pool(self, output):
         # print(output)
-        return output
+        pooled = []
+        for i in range(4):
+            a = [int(e/4 + i*self.sizeSDR/4) for e in output[i] if e%4==0]
+            pooled += a
+        return pooled
 
 
 
