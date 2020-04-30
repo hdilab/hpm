@@ -25,7 +25,7 @@ Model a single temporal prediction layer
 import numpy as np
 import pickle
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-4', comment='Two layer, Non-overlapping text')
+writer = SummaryWriter('runs/exp-6', comment='Overlapping case Use previous actual-input as context')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -83,7 +83,7 @@ class HeterarchicalPredictionMemory(object):
             if self.iteration == 4000:
                 print("debug")
             pred = self.predict(input)
-            actual = self.lower.feed(pred)
+            actual = self.lower.feed(self.prevActual)
             self.evaluate(pred, actual)
             self.update(input, actual)
             self.prevActual = actual
@@ -138,6 +138,7 @@ class HeterarchicalPredictionMemory(object):
         for i in range(4):
             a = [int(e/4 + i*self.sizeSDR/4) for e in output[i] if e%4==0]
             pooled += a
+        writer.add_scalar('pool/num' + self.name, len(pooled), self.iteration)
         return pooled
 
 
