@@ -22,14 +22,17 @@ Main experiment 1
 Read the Pride and Prejudice from Jane Austin and use if to train HPM
 Calculate the LogLikelyhood error rate
 """
-import numpy as np
-from SDR import SDR
-from temporalpredictionmemory import TemporalPredictionMemory
+
+from heterarchicalpredictionmemory import HeterarchicalPredictionMemory
 from txtfeeder import TXTFeeder
 import time
 import pickle
+import numpy as np
+import random
+from SDR import SDR
 
 LOAD_MODEL = False
+SAVE_MODEL = False
 
 start = time.time()
 
@@ -40,32 +43,36 @@ RANDOM_SEED = 42
 # We set 512 as the number of bits and 10 as number of ON bits
 NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
+INPUT_NOISE = 0.1
 
-L1feeder = TXTFeeder("shortest.txt",
+L1feeder = TXTFeeder("data/nonoverlapping.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
-                     seed=RANDOM_SEED)
+                     seed=RANDOM_SEED,
+                     inputNoise=INPUT_NOISE)
 
 if LOAD_MODEL:
     f = open("model.pkl",'rb')
     L1 = pickle.load(f)
     f.close()
 else:
-    L1 = TemporalPredictionMemory(cellsPerColumn=8,
-                               activationThreshold=7,
-                               connectedPermanence=0.5,
-                               numColumn =NUM_SDR_BIT,
-                               seed=RANDOM_SEED,
-                               feeder=L1feeder)
+    L1 = HeterarchicalPredictionMemory(sizeSDR=NUM_SDR_BIT,
+                                       numOnBits=NUM_SDR_ON_BIT,
+                                       seed=RANDOM_SEED,
+                                       lower=L1feeder
+                                       )
+
+population = [i for  i in range(NUM_SDR_BIT)]
+randomSDR = random.sample(population, NUM_SDR_ON_BIT)
 
 for i in range(1000000):
-    if i%1000 == 999:
+    if i%1000 == 999 and SAVE_MODEL:
         pickle.dump(L1, open("model.pkl","wb"))
         print("###### iteration ######", i)
         end = time.time()
         elasped = end - start
         print(time.strftime("%H:%M:%S", time.gmtime(elasped)))
 
-    L1.feedForward()
+    L1.feed(randomSDR)
 
 

@@ -46,12 +46,19 @@ class Feeder(object):
             It is 2% sparcity for 512 bit
 
       :param seed: (int) Seed for the random number generator. Default value ``42``.
+
+      :param inputNoise: (float) The Probability of a SDR bit to be error
+
     """
 
     def __init__(self,
                  numBits=512,
                  numOnBits=10,
-                 seed=42):
+                 seed=42,
+                 inputNoise=0.1):
         self.numBits = numBits
         self.numOnBits = numOnBits
+        self.seed = seed
+        self.inputNoiseFalseOff = 0.3
+        self.inputNoiseFalseOn = numOnBits * inputNoise/numOnBits
 

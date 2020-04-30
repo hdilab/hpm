@@ -55,29 +55,34 @@ class TXTFeeder(Feeder):
             It is 2% sparcity for 512 bit
 
       :param seed: (int) Seed for the random number generator. Default value ``42``.
+
+      :param inputNoise: (float) The Probability of a SDR bit to be error
+
     """
     def __init__(self,
                  inputFileName,
                  numBits=512,
                  numOnBits=10,
                  seed=42,
-                 ):
-        Feeder.__init__(self, numBits, numOnBits)
+                 inputNoise=0.1):
+
+        Feeder.__init__(self, numBits, numOnBits, seed, inputNoise)
         self.char_list = [char for char in open(inputFileName).read()]
         asc_chars = [chr(i) for i in range(128)]
         self.char_sdr = SDR(asc_chars,
                             numBits=numBits,
                             numOnBits=numOnBits,
-                            seed=seed)
+                            seed=seed,
+                            inputNoise=inputNoise)
         self.readIndex = -1
 
-    def feed(self):
+    def feed(self, context):
         if self.readIndex < len(self.char_list)-1:
             self.readIndex = self.readIndex + 1
         else:
             self.readIndex = -1
         inputChar = self.char_list[self.readIndex]
-        inputSDR = self.char_sdr.getSDR(inputChar)
+        inputSDR = self.char_sdr.getNoisySDR(inputChar)
         return inputChar, inputSDR
 
     def evaluatePrediction(self, inputChar, prediction):

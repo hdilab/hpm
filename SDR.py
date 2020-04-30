@@ -45,14 +45,27 @@ class SDR(object):
                  input_list,
                  numBits=512,
                  numOnBits=10,
-                 seed=42):
+                 seed=42,
+                 inputNoise=0.1):
 
         random.seed(seed)
-        population = range(0,numBits-1)
-        self.sdr_dict = {i:random.sample(population, numOnBits) for i in input_list}
+        self.population = [i for i in range(numBits)]
+        self.numOnBits = numOnBits
+        self.inputNoise = inputNoise
+        self.sdr_dict = {i:random.sample(self.population, numOnBits) for i in input_list}
+
 
     def getSDR(self, input):
         return self.sdr_dict[input]
+
+
+    def getNoisySDR(self, input):
+        inputSDR = self.sdr_dict[input]
+        inputSDR = [i for i in inputSDR if random.random() > self.inputNoise]
+        noise = random.sample(self.population, int(self.numOnBits * self.inputNoise))
+        return inputSDR + noise
+
+
 
     def getInput(self, sdr):
         """
@@ -78,6 +91,11 @@ class SDR(object):
         denominator = combinatorial(n, a)
 
         return numerator*1.0/denominator
+
+    def getRandomSDR(self):
+        noise = random.sample(self.population, numOnBits)
+        return noise
+
 
 def combinatorial(a,b):
     return factorial(a)*1.0/factorial(a-b)/factorial(a)
