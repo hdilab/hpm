@@ -23,9 +23,12 @@ Model a single temporal prediction layer
 """
 
 import numpy as np
+import random
 import pickle
+import time;
+localtime = time.asctime( time.localtime(time.time()) )
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-8', comment='Three dimensional Matrix')
+writer = SummaryWriter('runs/exp-9-' + localtime, comment='Sparse version Three dimensional Matrix')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -59,13 +62,14 @@ class HeterarchicalPredictionMemory(object):
         
         self.lower = lower
         np.random.seed(seed)
-        self.weights = np.random.rand(sizeSDR, sizeSDR, sizeSDR)
+        self.weights = {}
         self.iteration = 0
-        self.prevActual = []
-        self.dropout = dropbout
-        self.numOnBits = numOnBits
         self.sizeSDR = sizeSDR
-        self.prevDropout = np.zeros(self.weights.shape)
+        self.numOnBits = numOnBits
+        self.population = [i for i in range(self.sizeSDR)]
+        self.prevActual = random.sample(self.population, self.numOnBits)
+        self.dropout = dropbout
+
         self.accuracy = 0
         self.name=name
 
@@ -78,65 +82,73 @@ class HeterarchicalPredictionMemory(object):
         output = []
 
         for i in range(4):
+
             self.iteration += 1
             if self.iteration == 4000:
                 print("debug")
             pred = self.predict(self.prevActual,context)
-            actual = self.lower.feed(self.prevActual)
+            actual = self.lower.feed(pred)
             self.evaluate(pred, actual)
             self.update(self.prevActual, context, actual)
             self.prevActual = actual
-            output.append(pred)
+            output.append(actual)
         output = self.pool(output)
         return output
 
     def predict(self, input,context):
-        dropout = np.random.uniform(size=self.weights.shape)
-        dropout = (dropout > self.dropout).astype(np.int)
-        W = self.weights * dropout
-        self.prevDropout = dropout
-        # dice = np.random.uniform(size=self.weights.shape)
-        activation = (W > 1).astype(np.int)
-        inputFull = np.zeros((self.sizeSDR, self.sizeSDR))
-        for i in input:
-            for c in context:
-                inputFull[c,i] = 1
-        activation = activation * inputFull
-        output = activation.sum(axis=1)
-        output = output.sum(axis=1)
-        # result = np.sort(output)[::-1]
-        # result = result[:self.numOnBits]
-        # resultDict = {str(i):result[i] for i in range(self.numOnBits)}
-        # # writer.add_scalars('predict/predict_group', resultDict, self.iteration)
+        activation = {}
+        for o in self.weights:
+            for i in input:
+                for c in context:
+                    if (i,c) in self.weights[o]:
+                        if o in activation:
+                            activation[o] += 1
+                        else:
+                            activation[o] = 1
+        sortedActivation = sorted(activation.items(),key=lambda kv: kv[1], reverse=True)
+        sortedActivation = sortedActivation[:self.numOnBits]
+        output = [i[0] for i in sortedActivation]
+        result = [i[1] for i in sortedActivation]
+
+        if len(output) < self.numOnBits:
+            output +=   random.sample(self.population, self.numOnBits - len(output))
+
         # writer.add_scalar('predict/predict_mean' + self.name, np.mean(result), self.iteration)
         # writer.add_scalar('predict/predict_std'+ self.name, np.std(result), self.iteration)
-        output = (-output).argsort()[:self.numOnBits]
+
         return output
 
     def evaluate(self, pred, actual):
         intersection = [i for i in actual if i in pred]
-        accuracy = len(intersection)*1.0/len(actual)
+        if len(actual) == 0:
+            accuracy = 0
+        else:
+            accuracy = len(intersection)*1.0/len(actual)
         self.accuracy = 0.99*self.accuracy + 0.01*accuracy
-        if self.iteration %1 == 0:
+        if self.iteration %100 == 0:
             print("Iteration: \t", self.iteration, "Accuracy: \t", self.accuracy)
 
             writer.add_scalar('accuracy/numSDR'+ self.name, len(actual), self.iteration)
             writer.add_scalar('accuracy/acc'+ self.name, self.accuracy, self.iteration)
-            writer.add_scalar('weights/mean'+ self.name, np.mean(self.weights), self.iteration)
-            writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
+            # writer.add_scalar('weights/mean'+ self.name, np.mean(self.weights), self.iteration)
+            # writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
             # writer.add_histogram(self.name + 'weights', self.weights, self.iteration)
 
     def update(self, input, context, actual):
-        decMask = np.zeros(self.weights.shape)
-        for i in input:
-            for c in context:
-                decMask[:,i,c] = 1
-        incMask = np.zeros(self.weights.shape)
-        incMask[actual,:, :] = 1
-        incMask = decMask * incMask
-        mask = decMask * NUM_WEIGHT_DEC + incMask * NUM_WEIGHT_INC
-        mask = mask * self.prevDropout
-        self.weights += mask
+        for p in self.population:
+            if p in actual:
+                if p not in self.weights:
+                    self.weights[p] = {}
+                for i in input:
+                    for c in context:
+                        self.weights[p][(i,c)] = 1
+            else:
+                if p in self.weights:
+                    for i in input:
+                        for c in context:
+                            if (i,c) in self.weights[p]:
+                                del self.weights[p][(i,c)]
+
 
     def pool(self, output):
         # print(output)
@@ -145,6 +157,8 @@ class HeterarchicalPredictionMemory(object):
             a = [int(e/4 + i*self.sizeSDR/4) for e in output[i] if e%4==0]
             pooled += a
         writer.add_scalar('pool/num' + self.name, len(pooled), self.iteration)
+        if len(pooled) < self.numOnBits:
+            pooled +=   random.sample(self.population, self.numOnBits - len(pooled))
         return pooled
 
 
