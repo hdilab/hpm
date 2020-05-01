@@ -28,7 +28,7 @@ import pickle
 import time;
 localtime = time.asctime( time.localtime(time.time()) )
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('../runs/exp-11-' + localtime, comment='Sparse version Three dimensional Matrix')
+writer = SummaryWriter('../runs/exp-12-' + localtime, comment='Sparse version Three dimensional Matrix')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -125,7 +125,7 @@ class HeterarchicalPredictionMemory(object):
             accuracy = 0
         else:
             accuracy = len(intersection)*1.0/len(actual)
-        self.accuracy = 0.99*self.accuracy + 0.01*accuracy
+        self.accuracy = 0.999*self.accuracy + 0.001*accuracy
         if self.iteration %100 == 0:
             print("Iteration: \t", self.iteration, "Accuracy: \t", self.accuracy)
 
