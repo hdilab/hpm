@@ -87,7 +87,7 @@ class HeterarchicalPredictionMemory(object):
             if self.iteration == 4000:
                 print("debug")
             pred = self.predict(self.prevActual,context)
-            actual = self.lower.feed(pred)
+            actual = self.lower.feed(self.prevActual)
             self.evaluate(pred, actual)
             self.update(self.prevActual, context, actual)
             self.prevActual = actual

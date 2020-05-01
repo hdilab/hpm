@@ -45,7 +45,7 @@ NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
 INPUT_NOISE = 0.1
 
-L1feeder = TXTFeeder("data/1342.txt",
+L1feeder = TXTFeeder("data/medium.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
                      seed=RANDOM_SEED,
