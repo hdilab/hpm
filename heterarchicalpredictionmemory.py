@@ -95,8 +95,8 @@ class HeterarchicalPredictionMemory(object):
         dropout = (dropout > self.dropout).astype(np.int)
         W = self.weights * dropout
         self.prevDropout = dropout
-        dice = np.random.uniform(size=self.weights.shape)
-        activation = (W > dice).astype(np.int)
+        # dice = np.random.uniform(size=self.weights.shape)
+        activation = (W > 1).astype(np.int)
         inputFull = np.zeros((self.sizeSDR, self.sizeSDR))
         for i in input:
             for c in context:
@@ -104,12 +104,12 @@ class HeterarchicalPredictionMemory(object):
         activation = activation * inputFull
         output = activation.sum(axis=1)
         output = output.sum(axis=1)
-        result = np.sort(output)[::-1]
-        result = result[:self.numOnBits]
-        resultDict = {str(i):result[i] for i in range(self.numOnBits)}
-        # writer.add_scalars('predict/predict_group', resultDict, self.iteration)
-        writer.add_scalar('predict/predict_mean' + self.name, np.mean(result), self.iteration)
-        writer.add_scalar('predict/predict_std'+ self.name, np.std(result), self.iteration)
+        # result = np.sort(output)[::-1]
+        # result = result[:self.numOnBits]
+        # resultDict = {str(i):result[i] for i in range(self.numOnBits)}
+        # # writer.add_scalars('predict/predict_group', resultDict, self.iteration)
+        # writer.add_scalar('predict/predict_mean' + self.name, np.mean(result), self.iteration)
+        # writer.add_scalar('predict/predict_std'+ self.name, np.std(result), self.iteration)
         output = (-output).argsort()[:self.numOnBits]
         return output
 
@@ -124,7 +124,7 @@ class HeterarchicalPredictionMemory(object):
             writer.add_scalar('accuracy/acc'+ self.name, self.accuracy, self.iteration)
             writer.add_scalar('weights/mean'+ self.name, np.mean(self.weights), self.iteration)
             writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
-            writer.add_histogram(self.name + 'weights', self.weights, self.iteration)
+            # writer.add_histogram(self.name + 'weights', self.weights, self.iteration)
 
     def update(self, input, context, actual):
         decMask = np.zeros(self.weights.shape)
