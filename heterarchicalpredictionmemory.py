@@ -28,7 +28,7 @@ import pickle
 import time;
 localtime = time.asctime( time.localtime(time.time()) )
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-9-' + localtime, comment='Sparse version Three dimensional Matrix')
+writer = SummaryWriter('runs/exp-10-' + localtime, comment='Sparse version Three dimensional Matrix')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -101,10 +101,11 @@ class HeterarchicalPredictionMemory(object):
             for i in input:
                 for c in context:
                     if (i,c) in self.weights[o]:
-                        if o in activation:
-                            activation[o] += 1
-                        else:
-                            activation[o] = 1
+                        if random.random() < self.weights[o][(i,c)]['value']:
+                            if o in activation:
+                                activation[o] += 1
+                            else:
+                                activation[o] = 1
         sortedActivation = sorted(activation.items(),key=lambda kv: kv[1], reverse=True)
         sortedActivation = sortedActivation[:self.numOnBits]
         output = [i[0] for i in sortedActivation]
@@ -141,13 +142,18 @@ class HeterarchicalPredictionMemory(object):
                     self.weights[p] = {}
                 for i in input:
                     for c in context:
-                        self.weights[p][(i,c)] = 1
+                        if (i,c) in self.weights[p]:
+                            self.weights[p][(i,c)]['value'] += NUM_WEIGHT_INC
+                        else:
+                            self.weights[p][(i, c)] = {'value':NUM_WEIGHT_INC}
             else:
                 if p in self.weights:
                     for i in input:
                         for c in context:
                             if (i,c) in self.weights[p]:
-                                del self.weights[p][(i,c)]
+                                self.weights[p][(i,c)]['value'] += NUM_WEIGHT_DEC
+                                if self.weights[p][(i,c)]['value'] < 0:
+                                    del self.weights[p][(i,c)]
 
 
     def pool(self, output):
@@ -157,8 +163,8 @@ class HeterarchicalPredictionMemory(object):
             a = [int(e/4 + i*self.sizeSDR/4) for e in output[i] if e%4==0]
             pooled += a
         writer.add_scalar('pool/num' + self.name, len(pooled), self.iteration)
-        if len(pooled) < self.numOnBits:
-            pooled +=   random.sample(self.population, self.numOnBits - len(pooled))
+        # if len(pooled) < self.numOnBits:
+        #     pooled +=   random.sample(self.population, self.numOnBits - len(pooled))
         return pooled
 
 

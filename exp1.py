@@ -45,7 +45,7 @@ NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
 INPUT_NOISE = 0.1
 
-L1feeder = TXTFeeder("data/nonoverlapping.txt",
+L1feeder = TXTFeeder("data/1342.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
                      seed=RANDOM_SEED,
@@ -80,6 +80,6 @@ for i in range(10000):
         elasped = end - start
         print(time.strftime("%H:%M:%S", time.gmtime(elasped)))
 
-    L1.feed(randomSDR)
+    L2.feed(randomSDR)
 
 
