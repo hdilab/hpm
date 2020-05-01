@@ -25,7 +25,7 @@ Model a single temporal prediction layer
 import numpy as np
 import pickle
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-7', comment='Overlapping case Use previous actual-input as context')
+writer = SummaryWriter('runs/exp-8', comment='Three dimensional Matrix')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
@@ -59,7 +59,7 @@ class HeterarchicalPredictionMemory(object):
         
         self.lower = lower
         np.random.seed(seed)
-        self.weights = np.random.rand(sizeSDR, sizeSDR*2)
+        self.weights = np.random.rand(sizeSDR, sizeSDR, sizeSDR)
         self.iteration = 0
         self.prevActual = []
         self.dropout = dropbout
@@ -76,32 +76,34 @@ class HeterarchicalPredictionMemory(object):
 
     def feed(self, context):
         output = []
-        adjContext = [i+self.sizeSDR for i in context]
+
         for i in range(4):
-            input = self.prevActual + adjContext
             self.iteration += 1
             if self.iteration == 4000:
                 print("debug")
-            pred = self.predict(input)
+            pred = self.predict(self.prevActual,context)
             actual = self.lower.feed(self.prevActual)
             self.evaluate(pred, actual)
-            self.update(input, actual)
+            self.update(self.prevActual, context, actual)
             self.prevActual = actual
             output.append(pred)
         output = self.pool(output)
         return output
 
-    def predict(self, input):
+    def predict(self, input,context):
         dropout = np.random.uniform(size=self.weights.shape)
         dropout = (dropout > self.dropout).astype(np.int)
         W = self.weights * dropout
         self.prevDropout = dropout
         dice = np.random.uniform(size=self.weights.shape)
         activation = (W > dice).astype(np.int)
-        inputFull = np.zeros(self.sizeSDR*2)
-        inputFull[input] = 1
+        inputFull = np.zeros((self.sizeSDR, self.sizeSDR))
+        for i in input:
+            for c in context:
+                inputFull[c,i] = 1
         activation = activation * inputFull
         output = activation.sum(axis=1)
+        output = output.sum(axis=1)
         result = np.sort(output)[::-1]
         result = result[:self.numOnBits]
         resultDict = {str(i):result[i] for i in range(self.numOnBits)}
@@ -115,7 +117,7 @@ class HeterarchicalPredictionMemory(object):
         intersection = [i for i in actual if i in pred]
         accuracy = len(intersection)*1.0/len(actual)
         self.accuracy = 0.99*self.accuracy + 0.01*accuracy
-        if self.iteration %100 == 0:
+        if self.iteration %1 == 0:
             print("Iteration: \t", self.iteration, "Accuracy: \t", self.accuracy)
 
             writer.add_scalar('accuracy/numSDR'+ self.name, len(actual), self.iteration)
@@ -124,11 +126,13 @@ class HeterarchicalPredictionMemory(object):
             writer.add_scalar('weights/std' + self.name, np.std(self.weights), self.iteration)
             writer.add_histogram(self.name + 'weights', self.weights, self.iteration)
 
-    def update(self, input, actual):
+    def update(self, input, context, actual):
         decMask = np.zeros(self.weights.shape)
-        decMask[:,input] = 1
+        for i in input:
+            for c in context:
+                decMask[:,i,c] = 1
         incMask = np.zeros(self.weights.shape)
-        incMask[actual, :] = 1
+        incMask[actual,:, :] = 1
         incMask = decMask * incMask
         mask = decMask * NUM_WEIGHT_DEC + incMask * NUM_WEIGHT_INC
         mask = mask * self.prevDropout
