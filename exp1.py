@@ -69,6 +69,13 @@ else:
                                        name="L2"
                                        )
 
+    L3 = HeterarchicalPredictionMemory(sizeSDR=NUM_SDR_BIT,
+                                       numOnBits=NUM_SDR_ON_BIT,
+                                       seed=RANDOM_SEED,
+                                       lower=L2,
+                                       name="L3"
+                                       )
+
 population = [i for  i in range(NUM_SDR_BIT)]
 randomSDR = random.sample(population, NUM_SDR_ON_BIT)
 
@@ -80,6 +87,6 @@ for i in range(10000):
         elasped = end - start
         print(time.strftime("%H:%M:%S", time.gmtime(elasped)))
 
-    L2.feed(randomSDR)
+    L3.feed(randomSDR)
 
 

@@ -28,7 +28,7 @@ import pickle
 import time;
 localtime = time.asctime( time.localtime(time.time()) )
 from tensorboardX import SummaryWriter
-writer = SummaryWriter('runs/exp-10-' + localtime, comment='Sparse version Three dimensional Matrix')
+writer = SummaryWriter('../runs/exp-11-' + localtime, comment='Sparse version Three dimensional Matrix')
 
 DEBUG = True # Print lots of information
 PRINT_LOG = True # Will print the log of the accuracy
