@@ -23,7 +23,7 @@ Read the Pride and Prejudice from Jane Austin and use if to train HPM
 Calculate the LogLikelyhood error rate
 """
 
-from GBHFM import HeterarchicalPredictionMemory
+from heterarchicalpredictionmemory import HeterarchicalPredictionMemory
 from txtfeeder import TXTFeeder
 import time
 import pickle
@@ -80,12 +80,7 @@ population = [i for  i in range(NUM_SDR_BIT)]
 randomSDR = random.sample(population, NUM_SDR_ON_BIT)
 
 for i in range(10000):
-    if i%1000 == 999 and SAVE_MODEL:
-        pickle.dump(L1, open("model.pkl","wb"))
-        print("###### iteration ######", i)
-        end = time.time()
-        elasped = end - start
-        print(time.strftime("%H:%M:%S", time.gmtime(elasped)))
+
 
     L3.feed(randomSDR)
 
