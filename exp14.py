@@ -40,7 +40,20 @@ parser = argparse.ArgumentParser()
 parser.add_argument("input",
                     help="input text file you want to use")
 parser.add_argument("-n", "--name",
-                    help="name of the experiment. ex) EXP-14-short" )
+                    help="name of the experiment. ex) EXP-14-short",
+                    default="EXP")
+parser.add_argument("-e", "--epoch",
+                    type=int,
+                    help="Number of the epoch",
+                    default=1000)
+parser.add_argument("-b","--batch",
+                    type=int,
+                    help="batch size",
+                    default="64")
+parser.add_argument("-s", "--sequence",
+                    type=int,
+                    help="sequence length",
+                    default="192")
 args = parser.parse_args()
 
 with open(args.input, 'r') as f:
@@ -59,9 +72,10 @@ n_layers=4
 net = CharRNN(chars, n_hidden, n_layers, numBits=NumBits)
 print(net)
 
-batch_size = 4
-seq_length = 10 #max length verses
-n_epochs = 3000 # start smaller if you are just testing initial behavior
+batch_size = args.batch
+seq_length = args.sequence #max length verses
+n_epochs = args.epoch # start smaller if you are just testing initial behavior
+
 
 # train the model
 train.accuracy = 0
@@ -71,7 +85,7 @@ train(net,
       batch_size=batch_size,
       seq_length=seq_length,
       lr=0.0001,
-      print_every=10,
+      print_every=1000,
       name=args.name,
       numBits=NumBits)
 
