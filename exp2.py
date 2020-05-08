@@ -23,13 +23,11 @@ Read the Pride and Prejudice from Jane Austin and use if to train HPM
 Calculate the LogLikelyhood error rate
 """
 
-from heterarchicalpredictionmemory import HeterarchicalPredictionMemory
+from models.heterarchicalpredictionmemory import HeterarchicalPredictionMemory
 from txtfeeder import TXTFeeder
 import time
 import pickle
-import numpy as np
 import random
-from SDR import SDR
 
 LOAD_MODEL = False
 SAVE_MODEL = False
