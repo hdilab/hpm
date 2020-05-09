@@ -1,7 +1,7 @@
 from torch import nn
 import torch
 
-class FC(nn.Module):
+class FC_kWTA(nn.Module):
     def __init__(self,
                  numBits=512,
                  numOnBits=10):
@@ -16,3 +16,17 @@ class FC(nn.Module):
         comp = (out>=topval).to(out)
         return comp*out
 
+
+class FC(nn.Module):
+    def __init__(self,
+                 numBits=512,
+                 numOnBits=10):
+        super().__init__()
+        self.fc = nn.Linear(numBits, numBits)
+        self.sigmoid = nn.Sigmoid()
+        self.numOnBits = numOnBits
+
+    def forward(self, x):
+        out = self.fc(x)
+        out = self.sigmoid(out)
+        return out
