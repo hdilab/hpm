@@ -94,8 +94,8 @@ def train(net,
                   "Loss: {:.4f}...".format(loss.item()),
                   "SDR Acc: {:.3f}".format(train.accuracy))
 
-            writer.add_scalar('perf/train_loss' , loss.item(), epochs)
-            writer.add_scalar('perf/sdr_accuracy', train.accuracy, epochs)
+            writer.add_scalar('perf/train_loss' , loss.item(), e)
+            writer.add_scalar('perf/sdr_accuracy', train.accuracy, e)
 
 
 
