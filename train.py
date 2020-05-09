@@ -78,22 +78,23 @@ def train(net,
             opt.step()
 
             # SDR loss
+            net.eval()
             accuracy = accuracySDR(output, targets, numOnBits)
             train.accuracy = 0.999 * train.accuracy + 0.001 * accuracy
 
-            # loss stats
-            if counter % print_every == 0:
-                # Get validation loss
 
-                net.train()  # reset to train mode after iterationg through validation data
 
-                print("Epoch: {}/{}...".format(e + 1, epochs),
-                      "Step: {}...".format(counter),
-                      "Loss: {:.4f}...".format(loss.item()),
-                      "SDR Acc: {:.3f}".format(train.accuracy))
+            net.train()
+        if epochs % print_every == 0:
 
-                writer.add_scalar('perf/train_loss' , loss.item(), counter)
-                writer.add_scalar('perf/sdr_accuracy', train.accuracy, counter)
+
+            print("Epoch: {}/{}...".format(e + 1, epochs),
+                  "Step: {}...".format(counter),
+                  "Loss: {:.4f}...".format(loss.item()),
+                  "SDR Acc: {:.3f}".format(train.accuracy))
+
+            writer.add_scalar('perf/train_loss' , loss.item(), epochs)
+            writer.add_scalar('perf/sdr_accuracy', train.accuracy, epochs)
 
 
 
