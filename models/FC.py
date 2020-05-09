@@ -12,6 +12,7 @@ class FC(nn.Module):
     def forward(self, x):
         out = self.fc(x)
         topval = out.topk(self.numOnBits, dim=1)[0][:,-1]
-        comp = (out>=topval)
+        topval = topval.repeat(out.shape[1], 1).permute(1,0).view_as(out)
+        comp = (out>=topval).to(out)
         return comp*out
 
