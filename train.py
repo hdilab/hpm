@@ -88,7 +88,8 @@ def train(net,
         if epochs % print_every == 0:
 
 
-            print("Epoch: {}/{}...".format(e + 1, epochs),
+            print(name + ": ",
+                "Epoch: {}/{}...".format(e + 1, epochs),
                   "Step: {}...".format(counter),
                   "Loss: {:.4f}...".format(loss.item()),
                   "SDR Acc: {:.3f}".format(train.accuracy))
