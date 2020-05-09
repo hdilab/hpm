@@ -18,14 +18,16 @@
 # ----------------------------------------------------------------------
 
 """
-Main experiment 14
-Run the LSTM
+Main experiment 15
+Single Layer Perceptron
 """
 import numpy as np
 import argparse
-from SDR import SDR
 from train import train
-from models.CharRNN import CharRNN
+from models.FC import FC
+from torch.utils.data import TensorDataset
+from SDR import SDR
+import torch
 
 # Some constants for the experiment
 # Num of bits for the SDR input for character
@@ -63,13 +65,33 @@ asc_chars = [chr(i) for i in range(128)]
 chars = tuple(asc_chars)
 int2char = dict(enumerate(chars))
 char2int = {c:i for i, c in int2char.items()}
-encoded = np.array([char2int[ch] for ch in text])
+
+char_sdr = SDR(asc_chars,
+               numBits=NumBits,
+               numOnBits=NumOnBits,
+               seed=Seed,
+               inputNoise=InputNoise)
+
+def multi_hot_encoder(text, n_labels):
+    multi_hot = np.zeros((len(text), n_labels), dtype=np.float32)
+    for i, c in enumerate(text):
+        sdr = char_sdr.getNoisySDR(c)
+        multi_hot[i][np.array(sdr)] = 1
+    return multi_hot
+
+encoded = multi_hot_encoder(text, NumBits)
+
+a = torch.from_numpy(encoded[0:-1, :])
+b = torch.from_numpy(encoded[1:, :])
+
+train_ds = TensorDataset(a, b)
+
 
 # define and print the net
 n_hidden=1024
 n_layers=4
 
-net = CharRNN(chars, n_hidden, n_layers, numBits=NumBits)
+net = FC(numBits=NumBits)
 print(net)
 
 batch_size = args.batch
@@ -80,12 +102,12 @@ n_epochs = args.epoch # start smaller if you are just testing initial behavior
 # train the model
 train.accuracy = 0
 train(net,
-      encoded,
+      train_ds,
       epochs=n_epochs,
       batch_size=batch_size,
-      seq_length=seq_length,
       lr=0.0001,
-      print_every=100,
+      print_every=1000,
       name=args.name,
-      numBits=NumBits)
+      numBits=NumBits,
+      numOnBits=NumOnBits)
 
