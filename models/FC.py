@@ -28,5 +28,5 @@ class FC(nn.Module):
 
     def forward(self, x):
         out = self.fc(x)
-        out = self.sigmoid(out)
+        # out = self.sigmoid(out)
         return out
