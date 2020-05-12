@@ -24,7 +24,7 @@ Single Layer Perceptron
 import numpy as np
 import argparse
 from train import train
-from models.FC import FC
+from models.FC import FC, FC_kWTA, FCML
 from torch.utils.data import TensorDataset
 from SDR import SDR
 import torch
@@ -91,7 +91,8 @@ train_ds = TensorDataset(a, b)
 n_hidden=1024
 n_layers=4
 
-net = FC(numBits=NumBits)
+net = FCML(numBits=NumBits,
+              numOnBits=NumOnBits)
 print(net)
 
 batch_size = args.batch

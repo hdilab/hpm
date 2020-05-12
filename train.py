@@ -74,7 +74,7 @@ def train(net,
             loss = criterion(output, targets)
             loss.backward()
             # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-            nn.utils.clip_grad_norm_(net.parameters(), clip)
+            # nn.utils.clip_grad_norm_(net.parameters(), clip)
             opt.step()
 
             # SDR loss
