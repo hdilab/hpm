@@ -77,8 +77,12 @@ class NNSAR(object):
         self.lrateIP = 0.001 # learning rate for intrinsic plasticity (IP)
         self.meanIP = 0.02 # desired mean activity, a parameter of IP
 
-        self.losses = [ 0 for i in range(10000)]
-        self.recalls = [0 for i in range(10000)]
+
+        self.printInterval = 1000
+        self.losses = [ 0 for i in range(self.printInterval)]
+        self.recalls = [0 for i in range(self.printInterval)]
+        self.reconstructionErrors = [0 for i in range(self.printInterval)]
+        self.reconstructionRecalls = [0 for i in range(self.printInterval)]
         self.iteration = 0
 
     def printHeader(self):
@@ -89,14 +93,13 @@ class NNSAR(object):
     def feed(self, context):
         output = []
         for i in range(4):
-            self.predict()
-            self.actual = self.lower.feed(self.prevActual)
-            self.evaluate()
-            self.update()
-            self.prevActual = self.actual
-            output.append(self.actual)
-            self.iteration += 1
-        output = self.pool(output)
+            output.append(self.lower.feed(self.prevActual))
+        self.predict()
+        self.actual = np.concatenate(output)
+        self.evaluate()
+        self.update()
+        self.prevActual = self.actual
+        self.iteration += 1
         return output
 
 # Update network activation
@@ -111,16 +114,27 @@ class NNSAR(object):
         self.pred = self.W * self.h
 
     def evaluate(self):
-        error = self.prevActual - self.pred
-        loss = (error.T * error) / self.inputDim
-        self.losses[self.iteration%10000] = loss[0,0]
-        recall = self.getRecallError(self.prevActual, self.pred)
-        self.recalls[self.iteration%10000] = recall
+        self.losses[self.iteration%self.printInterval] = \
+            self.getMSE(self.prevActual, self.pred)
+        self.recalls[self.iteration % self.printInterval] = \
+            self.getRecallError(self.prevActual, self.pred)
+        reconstructPred = self.getReconstruction()
+        self.reconstructionErrors[self.iteration % self.printInterval] = \
+            self.getMSE(self.prevActual, reconstructPred)
+        self.reconstructionRecalls[self.iteration % self.printInterval] = \
+            self.getRecallError(self.prevActual, reconstructPred)
 
-        if self.iteration % 10000 == 0:
+
+        if self.iteration % self.printInterval  == 0:
             accuracy = np.mean(self.losses)
             meanRecall = np.mean(self.recalls)
-            print("Iteration: \t", self.iteration, "\t MSE: \t",  accuracy, "\t Recall: \t",  meanRecall)
+            meanReconstructionError = np.mean(self.reconstructionErrors)
+            meanReconstructionRecall = np.mean(self.reconstructionRecalls)
+            print("Iteration: \t", self.iteration, \
+                  "\t MSE: \t",  accuracy, \
+                  "\t Recall: \t",  meanRecall, \
+                  "\t Reconstruction MSE: \t", meanReconstructionError, \
+                  "\t Reconstruction Recall: \t", meanReconstructionRecall)
             writer.add_scalar('accuracy/loss', accuracy, self.iteration)
 
     def getRecallError(self, target, pred):
@@ -135,6 +149,18 @@ class NNSAR(object):
         intersection = [i for i in targetSparse if i in predSparse]
         recall = len(intersection) / (numTarget + 0.0001)
         return recall
+
+    def getReconstruction(self):
+        ind = np.argsort(self.h, axis=0)[-10:]
+        reconstructH = np.zeros(self.h.shape)
+        reconstructH[ind] = 1.0
+        reconstructPred = self.W * reconstructH
+        return reconstructPred
+
+    def getMSE(self, target, pred):
+        error = target - pred
+        loss = (error.T * error) / self.inputDim
+        return loss[0,0]
 
     def update(self):
         # calculate adaptive learning rate

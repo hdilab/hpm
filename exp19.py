@@ -40,15 +40,15 @@ np.random.seed(RANDOM_SEED)
 # We set 512 as the number of bits and 10 as number of ON bits
 NUM_SDR_BIT = 512
 NUM_SDR_ON_BIT = 10
-INPUT_NOISE = 0.0
+INPUT_NOISE = 0.1
 
-L1feeder = TXTFeeder("data/nonoverlapping.txt",
+L1feeder = TXTFeeder("data/long.txt",
                      numBits=NUM_SDR_BIT,
                      numOnBits=NUM_SDR_ON_BIT,
                      inputNoise=INPUT_NOISE)
 
-L1 = NNSAR(inputDim=NUM_SDR_BIT,
-           hiddenDim=NUM_SDR_BIT//4,
+L1 = NNSAR(inputDim=NUM_SDR_BIT*4,
+           hiddenDim=NUM_SDR_BIT,
            lower=L1feeder,
            name="L1"
            )
