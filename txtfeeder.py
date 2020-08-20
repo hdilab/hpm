@@ -63,16 +63,14 @@ class TXTFeeder(Feeder):
                  inputFileName,
                  numBits=512,
                  numOnBits=10,
-                 seed=42,
                  inputNoise=0.1):
 
-        Feeder.__init__(self, numBits, numOnBits, seed, inputNoise)
+        Feeder.__init__(self, numBits, numOnBits, inputNoise)
         self.char_list = [char for char in open(inputFileName).read()]
         asc_chars = [chr(i) for i in range(128)]
         self.char_sdr = SDR(asc_chars,
                             numBits=numBits,
                             numOnBits=numOnBits,
-                            seed=seed,
                             inputNoise=inputNoise)
         self.readIndex = -1
 
@@ -82,7 +80,8 @@ class TXTFeeder(Feeder):
         else:
             self.readIndex = -1
         inputChar = self.char_list[self.readIndex]
-        inputSDR = self.char_sdr.getNoisySDR(inputChar)
+        sparseSDR = self.char_sdr.getNoisySDR(inputChar)
+        inputSDR = self.char_sdr.getDenseFromSparse(sparseSDR)
         return inputSDR
 
     def evaluatePrediction(self, inputChar, prediction):
