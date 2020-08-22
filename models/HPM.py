@@ -71,10 +71,12 @@ class HPM(object):
 
 
     def evaluate(self):
+        actual = self.actual.detach().numpy()
+        pred = self.pred.detach().numpy()
         self.losses[self.iteration%self.printInterval] = \
-            self.getMSE(self.actual, self.pred)
+            self.getMSE(actual, pred)
         self.recalls[self.iteration % self.printInterval] = \
-            self.getRecallError(self.actual, self.pred)
+            self.getRecallError(actual, pred)
         # reconstructPred = self.getReconstruction()
         # self.reconstructionErrors[self.iteration % self.printInterval] = \
         #     self.getMSE(self.prevActual, reconstructPred)
@@ -96,15 +98,15 @@ class HPM(object):
             # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
 
     def getRecallError(self, target, pred):
-        targetSparse = np.asarray(target).flatten()
-        targetSparse = np.where(targetSparse > 0.1)
-        targetSparse = list(targetSparse[0])
+        targetSparse = target[0]
+        targetIdx = np.where(targetSparse > 0.1)
+        targetIdx = list(targetIdx[0])
         # targetSparse = list(targetSparse)
-        numTarget = len(targetSparse)
-        predSparse = np.asarray(pred).flatten()
+        numTarget = len(targetIdx)
+        predSparse = pred[0]
         predSparse = np.argsort(predSparse)[-1 * numTarget:]
         predSparse = list(predSparse)
-        intersection = [i for i in targetSparse if i in predSparse]
+        intersection = [i for i in targetIdx if i in predSparse]
         recall = len(intersection) / (numTarget + 0.0001)
         return recall
 
@@ -116,8 +118,7 @@ class HPM(object):
         return reconstructPred
 
     def getMSE(self, target, pred):
-
-        error = target.squeeze() - pred.squeeze()
+        error = target - pred
         loss = (error.T @ error) / self.numBits
         return loss
 
