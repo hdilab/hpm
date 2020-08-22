@@ -1,5 +1,10 @@
 from torch import nn
 import torch
+import numpy as np
+from torch import unsqueeze
+from models.NNSAE import NNSAE
+
+# writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
 
 class FC_kWTA(nn.Module):
     def __init__(self,
@@ -28,23 +33,20 @@ class FC(nn.Module):
 
     def forward(self, x):
         out = self.fc(x)
-        # out = self.sigmoid(out)
+        out = torch.sigmoid(out)
         return out
 
 class FCML(nn.Module):
     def __init__(self,
-                 numBits=512,
-                 numOnBits=10):
-        super().__init__()
-        self.fc1 = nn.Linear(numBits, numBits)
-        self.fc2 = nn.Linear(numBits, numBits)
-        self.sigmoid1 = nn.Sigmoid()
-        # self.sigmoid2 = nn.Sigmoid()
-        self.numOnBits = numOnBits
+                 inputDim=1024,
+                 hiddenDim=256,
+                 outputDim=512):
+        super(FCML,self).__init__()
+        self.fc1 = nn.Linear(inputDim, hiddenDim)
+        self.fc2 = nn.Linear(hiddenDim, outputDim)
 
     def forward(self, x):
-        out = self.sigmoid1(self.fc1(x))
-        out = self.fc2(out)
-
-        # out = self.sigmoid(out)
+        a = self.fc1(x)
+        h = torch.sigmoid(a)
+        out = self.fc2(h)
         return out

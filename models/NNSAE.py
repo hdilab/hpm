@@ -23,16 +23,12 @@ Model a single temporal prediction layer
 """
 
 import numpy as np
-import pickle
 from tensorboardX import SummaryWriter
 from numpy.matlib  import rand, zeros, ones
-import queue
 
 writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
 
-
-
-class NNSAR(object):
+class NNSAE(object):
     """
     Class implementing the Temporal Prediciton Memory.
     :param input_list: (List) List for input_values.
@@ -44,19 +40,16 @@ class NNSAR(object):
     """
 
     def __init__(self,
-                 inputDim=512,
-                 hiddenDim=128,
-                 lower=None,
-                 name="layer"):
+                 inputDim=2048,
+                 hiddenDim=512,
+                 name="NNSAE"):
 
-        self.lower = lower
         self.inputDim = inputDim # number of input neurons
         self.hiddenDim = hiddenDim # number of hidden neurons
 
-        self.prevActual = zeros((self.inputDim, 1)) # vector holding current input
-        self.prevActual[0] = 1
-        self.actual = zeros((self.inputDim, 1)) # vector holding current input
-        self.pred = zeros((self.inputDim, 1)) # vector holding current input
+        self.inp = zeros((self.inputDim, 1)) # vector holding current input
+        self.inp[0] = 1
+        self.out = zeros((self.inputDim, 1)) # vector holding current input
 
         self.g = zeros((self.hiddenDim, 1)) # neural activity before non-linearity
         self.h = zeros((self.hiddenDim, 1)) # hidden neuron activation
@@ -76,6 +69,7 @@ class NNSAR(object):
 
         self.lrateIP = 0.001 # learning rate for intrinsic plasticity (IP)
         self.meanIP = 0.02 # desired mean activity, a parameter of IP
+        self.name = name
 
 
         self.printInterval = 1000
@@ -85,58 +79,49 @@ class NNSAR(object):
         self.reconstructionRecalls = [0 for i in range(self.printInterval)]
         self.iteration = 0
 
-    def printHeader(self):
-        print("====================================")
-        print("Iteration: ", self.iteration)
-        print("====================================")
+    def pool(self, X):
+        self.inp = np.expand_dims(X, axis=1)
+        self.forward()
+        self.evaluate()
+        self.update()
+        self.iteration += 1
+        return self.h
 
-    def feed(self, context):
-        output = []
-        for i in range(4):
-            self.predict()
-            self.actual = self.lower.feed(self.prevActual)
-            self.evaluate()
-            self.update()
-            self.prevActual = self.actual
-            output.append(self.actual)
-            self.iteration += 1
-        output = self.pool(output)
-        return output
+        # Update network activation
+        # This helper function computes the new activation pattern of the
+        # hidden layer for a given input. Note that self.inp field has to be set in advance.
 
-# Update network activation
-# This helper function computes the new activation pattern of the
-# hidden layer for a given input. Note that self.inp field has to be set in advance.
-    def predict(self):
+    def forward(self):
         # excite network
-        self.g = self.W.T * self.prevActual
+        self.g = self.W.T * self.inp
         # apply activation function
         self.h = 1 / (1 + np.exp(np.multiply(-self.a, self.g) - self.b))
         # read-out
-        self.pred = self.W * self.h
+        self.out = self.W * self.h
 
     def evaluate(self):
-        self.losses[self.iteration%self.printInterval] = \
-            self.getMSE(self.prevActual, self.pred)
+        self.losses[self.iteration % self.printInterval] = \
+            self.getMSE(self.inp, self.out)
         self.recalls[self.iteration % self.printInterval] = \
-            self.getRecallError(self.prevActual, self.pred)
+            self.getRecallError(self.inp, self.out)
         reconstructPred = self.getReconstruction()
         self.reconstructionErrors[self.iteration % self.printInterval] = \
-            self.getMSE(self.prevActual, reconstructPred)
+            self.getMSE(self.inp, reconstructPred)
         self.reconstructionRecalls[self.iteration % self.printInterval] = \
-            self.getRecallError(self.prevActual, reconstructPred)
+            self.getRecallError(self.inp, reconstructPred)
 
-
-        if self.iteration % self.printInterval  == 0:
+        if self.iteration % self.printInterval == 0:
             accuracy = np.mean(self.losses)
             meanRecall = np.mean(self.recalls)
             meanReconstructionError = np.mean(self.reconstructionErrors)
             meanReconstructionRecall = np.mean(self.reconstructionRecalls)
-            print("Iteration: \t", self.iteration, \
-                  "\t MSE: \t",  accuracy, \
-                  "\t Recall: \t",  meanRecall, \
+            print(self.name, \
+                  "Iteration: \t", self.iteration, \
+                  "\t MSE: \t", accuracy, \
+                  "\t Recall: \t", meanRecall, \
                   "\t Reconstruction MSE: \t", meanReconstructionError, \
                   "\t Reconstruction Recall: \t", meanReconstructionRecall)
-            writer.add_scalar('accuracy/loss', accuracy, self.iteration)
+            # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
 
     def getRecallError(self, target, pred):
         targetSparse = np.asarray(target).flatten()
@@ -161,14 +146,14 @@ class NNSAR(object):
     def getMSE(self, target, pred):
         error = target - pred
         loss = (error.T * error) / self.inputDim
-        return loss[0,0]
+        return loss[0, 0]
 
     def update(self):
         # calculate adaptive learning rate
         lrate = self.lrateRO / (self.regRO + sum(np.power(self.h, 2)))
 
         # calculate error
-        error = self.prevActual - self.pred
+        error = self.inp - self.out
         loss = (error.T * error) / self.inputDim
 
         # update weights
@@ -196,9 +181,3 @@ class NNSAR(object):
         self.b = self.b + tmp
         self.a = self.a + self.lrateIP * hones / \
                  self.a + np.multiply(self.g, tmp)
-
-    def pool(self, output):
-        # print(output)
-        return output
-
-

@@ -18,16 +18,14 @@
 # ----------------------------------------------------------------------
 
 """
-Main experiment 15
-Single Layer Perceptron
+Main experiment 21
+MLP with BCELogit Loss for autoregressive model
+NNSAE for pooler
 """
 import numpy as np
 import argparse
-from train import train
-from models.FC import FC, FC_kWTA, HPM
-from torch.utils.data import TensorDataset
-from SDR import SDR
-import torch
+from models.HPM import HPM
+from txtfeeder import TXTFeeder
 
 # Some constants for the experiment
 # Num of bits for the SDR input for character
@@ -57,58 +55,30 @@ parser.add_argument("-s", "--sequence",
                     help="sequence length",
                     default="192")
 args = parser.parse_args()
-
-with open(args.input, 'r') as f:
-    text = f.read()
-
-asc_chars = [chr(i) for i in range(128)]
-chars = tuple(asc_chars)
-int2char = dict(enumerate(chars))
-char2int = {c:i for i, c in int2char.items()}
-
-char_sdr = SDR(asc_chars,
-               numBits=NumBits,
-               numOnBits=NumOnBits,
-               seed=Seed,
-               inputNoise=InputNoise)
-
-def multi_hot_encoder(text, n_labels):
-    multi_hot = np.zeros((len(text), n_labels), dtype=np.float32)
-    for i, c in enumerate(text):
-        sdr = char_sdr.getNoisySDR(c)
-        multi_hot[i][np.array(sdr)] = 1
-    return multi_hot
-
-encoded = multi_hot_encoder(text, NumBits)
-
-a = torch.from_numpy(encoded[0:-1, :])
-b = torch.from_numpy(encoded[1:, :])
-
-train_ds = TensorDataset(a, b)
-
-
-# define and print the net
-n_hidden=1024
-n_layers=4
-
-net = HPM(numBits=NumBits,
-          numOnBits=NumOnBits)
-print(net)
-
-batch_size = args.batch
-seq_length = args.sequence #max length verses
 n_epochs = args.epoch # start smaller if you are just testing initial behavior
 
+L1feeder = TXTFeeder(args.input,
+                     numBits=NumBits,
+                     numOnBits=NumOnBits,
+                     inputNoise=InputNoise)
 
-# train the model
-train.accuracy = 0
-train(net,
-      train_ds,
-      epochs=n_epochs,
-      batch_size=batch_size,
-      lr=0.0001,
-      print_every=1000,
-      name=args.name,
-      numBits=NumBits,
-      numOnBits=NumOnBits)
+L1 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L1feeder,
+         name="L1")
 
+L2 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L1,
+         name="L2")
+
+L3 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L2,
+         name="L3")
+
+
+randomSDR = np.random.random(NumBits)
+
+for i in range(n_epochs):
+    L1.feed(randomSDR)
