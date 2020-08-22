@@ -33,7 +33,7 @@ class FC(nn.Module):
 
     def forward(self, x):
         out = self.fc(x)
-        out = torch.sigmoid(out)
+        # out = torch.sigmoid(out)
         return out
 
 class FCML(nn.Module):
@@ -41,7 +41,7 @@ class FCML(nn.Module):
                  inputDim=1024,
                  hiddenDim=256,
                  outputDim=512):
-        super(FCML,self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(inputDim, hiddenDim)
         self.fc2 = nn.Linear(hiddenDim, outputDim)
 

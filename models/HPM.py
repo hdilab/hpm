@@ -12,23 +12,23 @@ class HPM(object):
                  lower=None,
                  name="layer"):
         super().__init__()
-        # self.mlp = FC(numBits=512,
-        #               numOnBits=10)
-        self.mlp = FCML(inputDim=numBits,
-                        hiddenDim=256,
-                        outputDim=numBits)
+        self.mlp = FC(numBits=512,
+                      numOnBits=10)
+        # self.mlp = FCML(inputDim=numBits,
+        #                 hiddenDim=256,
+        #                 outputDim=numBits)
         self.pooler = NNSAE( inputDim=numBits*4,
                              hiddenDim=numBits,
                              name=name+"-AE")
-        self.lr = 0.00001
+        self.lr = 0.0001
         self.lower = lower
         self.name = name
         self.numBits = numBits
         self.numOnBits = numOnBits
-        self.prevActual = torch.rand((1, 1, numBits)) # vector holding current input
+        self.prevActual = torch.rand((1, numBits)) # vector holding current input
         self.prevActual[0] = 1
-        self.actual = torch.rand((1, 1, numBits)) # vector holding current input
-        self.pred = torch.rand((1, 1, numBits)) # vector holding current input
+        self.actual = torch.rand((1, numBits)) # vector holding current input
+        self.pred = torch.rand((1, numBits)) # vector holding current input
 
         self.printInterval = 1000
         self.losses = [ 0 for i in range(self.printInterval)]
@@ -44,8 +44,10 @@ class HPM(object):
         output = []
         for i in range(4):
             actual =  self.lower.feed(self.prevActual)
-            self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
-            self.mlp.train()
+            # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
+            self.actual = torch.tensor(actual.T, dtype=torch.float32)
+            # self.mlp.train()
+            self.mlp.zero_grad()
             self.opt.zero_grad()
             self.pred = self.mlp(self.prevActual)
             loss = self.criterion(self.pred, self.actual)
@@ -53,6 +55,7 @@ class HPM(object):
                 print(self.iteration, loss.item())
 
             loss.backward()
+            nn.utils.clip_grad_norm_(self.mlp.parameters(), 5)
             self.opt.step()
 
 
@@ -62,7 +65,7 @@ class HPM(object):
                 output.append(self.actual.squeeze().numpy())
                 self.iteration += 1
         output = np.concatenate(output)
-        output = self.pooler.pool(output)
+        # output = self.pooler.pool(output)
         return output
 
 

@@ -34,7 +34,7 @@ from txtfeeder import TXTFeeder
 NumOnBits = 10
 NumBits = 512
 Seed = 42
-InputNoise = 0.1
+InputNoise = 0.0
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input",
