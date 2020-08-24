@@ -47,6 +47,7 @@ class SDR(object):
                  numOnBits=10,
                  inputNoise=0.1):
         self.population = [i for i in range(numBits)]
+        random.seed(42)
         self.numOnBits = numOnBits
         self.numBits = numBits
         self.inputNoise = inputNoise

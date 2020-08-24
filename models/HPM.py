@@ -12,11 +12,11 @@ class HPM(object):
                  lower=None,
                  name="layer"):
         super().__init__()
-        self.mlp = FC(inputDim=512,
-                      outputDim=512)
-        # self.mlp = FCML(inputDim=numBits,
-        #                 hiddenDim=256,
-        #                 outputDim=numBits)
+        # self.mlp = FC(inputDim=512,
+        #               outputDim=512)
+        self.mlp = FCML(inputDim=numBits*2,
+                        hiddenDim=256,
+                        outputDim=numBits)
         self.pooler = NNSAE( inputDim=numBits*4,
                              hiddenDim=numBits,
                              name=name+"-AE")
@@ -49,7 +49,8 @@ class HPM(object):
             # self.mlp.train()
             self.mlp.zero_grad()
             # self.opt.zero_grad()
-            self.pred = self.mlp(self.prevActual)
+            input = torch.cat((self.prevActual, context), dim=1)
+            self.pred = self.mlp(input)
             loss = self.criterion(self.pred, self.actual)
             # if self.iteration % self.printInterval == self.printInterval-1:
             #     print(self.iteration, loss.item())
@@ -63,8 +64,8 @@ class HPM(object):
             self.prevActual = self.actual.detach()
             output.append(self.actual.squeeze().numpy())
             self.iteration += 1
-        # output = np.concatenate(output)
-        # output = self.pooler.pool(output)
+        output = np.concatenate(output)
+        output = self.pooler.pool(output)
         return output
 
 

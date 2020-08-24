@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from torch import unsqueeze
 from models.NNSAE import NNSAE
+torch.manual_seed(42)
 
 # writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
 
