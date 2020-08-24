@@ -12,8 +12,8 @@ class HPM(object):
                  lower=None,
                  name="layer"):
         super().__init__()
-        self.mlp = FC(numBits=512,
-                      numOnBits=10)
+        self.mlp = FC(inputDim=512,
+                      outputDim=512)
         # self.mlp = FCML(inputDim=numBits,
         #                 hiddenDim=256,
         #                 outputDim=numBits)
@@ -26,7 +26,6 @@ class HPM(object):
         self.numBits = numBits
         self.numOnBits = numOnBits
         self.prevActual = torch.rand((1, numBits)) # vector holding current input
-        self.prevActual[0] = 1
         self.actual = torch.rand((1, numBits)) # vector holding current input
         self.pred = torch.rand((1, numBits)) # vector holding current input
 
@@ -35,6 +34,7 @@ class HPM(object):
         self.recalls = [0 for i in range(self.printInterval)]
         self.reconstructionErrors = [0 for i in range(self.printInterval)]
         self.reconstructionRecalls = [0 for i in range(self.printInterval)]
+        self.bceloss = [0 for i in range(self.printInterval)]
         self.iteration = 0
 
         self.opt = torch.optim.Adam(self.mlp.parameters(), lr=self.lr)
@@ -48,23 +48,22 @@ class HPM(object):
             self.actual = torch.tensor(actual.T, dtype=torch.float32)
             # self.mlp.train()
             self.mlp.zero_grad()
-            self.opt.zero_grad()
+            # self.opt.zero_grad()
             self.pred = self.mlp(self.prevActual)
             loss = self.criterion(self.pred, self.actual)
-            if self.iteration % self.printInterval == self.printInterval-1:
-                print(self.iteration, loss.item())
+            # if self.iteration % self.printInterval == self.printInterval-1:
+            #     print(self.iteration, loss.item())
+            self.bceloss[self.iteration % self.printInterval] = loss.item()
 
             loss.backward()
             nn.utils.clip_grad_norm_(self.mlp.parameters(), 5)
             self.opt.step()
 
-
-            with torch.no_grad():
-                self.evaluate()
-                self.prevActual = self.actual
-                output.append(self.actual.squeeze().numpy())
-                self.iteration += 1
-        output = np.concatenate(output)
+            self.evaluate()
+            self.prevActual = self.actual.detach()
+            output.append(self.actual.squeeze().numpy())
+            self.iteration += 1
+        # output = np.concatenate(output)
         # output = self.pooler.pool(output)
         return output
 
@@ -87,14 +86,12 @@ class HPM(object):
         if self.iteration % self.printInterval  == 0:
             accuracy = np.mean(self.losses)
             meanRecall = np.mean(self.recalls)
-            meanReconstructionError = np.mean(self.reconstructionErrors)
-            meanReconstructionRecall = np.mean(self.reconstructionRecalls)
+            bce = np.mean(self.bceloss)
             print(self.name, \
                   "\t Iteration: \t", self.iteration, \
+                  "\t BCELoss: \t", bce, \
                   "\t MSE: \t",  accuracy, \
-                  "\t Recall: \t",  meanRecall, \
-                  "\t Reconstruction MSE: \t", meanReconstructionError, \
-                  "\t Reconstruction Recall: \t", meanReconstructionRecall)
+                  "\t Recall: \t",  meanRecall)
             # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
 
     def getRecallError(self, target, pred):

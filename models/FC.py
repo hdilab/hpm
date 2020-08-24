@@ -24,12 +24,11 @@ class FC_kWTA(nn.Module):
 
 class FC(nn.Module):
     def __init__(self,
-                 numBits=512,
-                 numOnBits=10):
+                 inputDim=512,
+                 outputDim=512):
         super().__init__()
-        self.fc = nn.Linear(numBits, numBits)
+        self.fc = nn.Linear(inputDim, outputDim)
         self.sigmoid = nn.Sigmoid()
-        self.numOnBits = numOnBits
 
     def forward(self, x):
         out = self.fc(x)
