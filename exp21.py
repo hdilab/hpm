@@ -27,6 +27,13 @@ import argparse
 from models.HPM import HPM
 from txtfeeder import TXTFeeder
 import torch
+import time
+
+localtime = time.asctime(time.localtime(time.time()))
+from tensorboardX import SummaryWriter
+
+writer = SummaryWriter('../runs/exp-21-' + localtime, comment='EXP-21')
+
 
 # Some constants for the experiment
 # Num of bits for the SDR input for character
@@ -66,17 +73,20 @@ L1feeder = TXTFeeder(args.input,
 L1 = HPM(numBits=NumBits,
          numOnBits=NumOnBits,
          lower=L1feeder,
-         name="L1")
+         name="L1",
+         writer=writer)
 
 L2 = HPM(numBits=NumBits,
          numOnBits=NumOnBits,
          lower=L1,
-         name="L2")
+         name="L2",
+         writer=writer)
 
 L3 = HPM(numBits=NumBits,
          numOnBits=NumOnBits,
          lower=L2,
-         name="L3")
+         name="L3",
+         writer=writer)
 
 
 randomSDR = torch.rand((1, NumBits))

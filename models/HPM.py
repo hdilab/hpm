@@ -4,19 +4,15 @@ import numpy as np
 from torch import unsqueeze
 from models.NNSAE import NNSAE
 from models.FC import FCML, FC
-import time
-
-localtime = time.asctime(time.localtime(time.time()))
-from tensorboardX import SummaryWriter
-
-writer = SummaryWriter('../runs/exp-21-' + localtime, comment='EXP-21')
 
 class HPM(object):
     def __init__(self,
                  numBits=512,
                  numOnBits=10,
                  lower=None,
-                 name="layer"):
+                 name="layer",
+                 writer=None):
+
         super().__init__()
         # self.mlp = FC(inputDim=512,
         #               outputDim=512)
@@ -27,6 +23,7 @@ class HPM(object):
                              hiddenDim=numBits,
                              name=name+"-AE",
                              writer= writer)
+        self.writer=writer
         self.lr = 0.0001
         self.lower = lower
         self.name = name
@@ -100,8 +97,8 @@ class HPM(object):
                   "\t BCELoss: \t", bce, \
                   "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall)
-            writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
-            writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
+            self.writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
+            self.writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
 
 
     def getRecallError(self, target, pred):
