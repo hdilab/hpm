@@ -4,6 +4,12 @@ import numpy as np
 from torch import unsqueeze
 from models.NNSAE import NNSAE
 from models.FC import FCML, FC
+import time
+
+localtime = time.asctime(time.localtime(time.time()))
+from tensorboardX import SummaryWriter
+
+writer = SummaryWriter('../runs/exp-21-' + localtime, comment='EXP-21')
 
 class HPM(object):
     def __init__(self,
@@ -93,7 +99,9 @@ class HPM(object):
                   "\t BCELoss: \t", bce, \
                   "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall)
-            # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
+            writer.add_scalar('loss/BCE'+self.name, accuracy, self.iteration)
+            writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
+
 
     def getRecallError(self, target, pred):
         targetSparse = target[0]
