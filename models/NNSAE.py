@@ -23,10 +23,8 @@ Model a single temporal prediction layer
 """
 
 import numpy as np
-from tensorboardX import SummaryWriter
 from numpy.matlib  import rand, zeros, ones
 
-writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
 
 class NNSAE(object):
     """
@@ -42,7 +40,8 @@ class NNSAE(object):
     def __init__(self,
                  inputDim=2048,
                  hiddenDim=512,
-                 name="NNSAE"):
+                 name="NNSAE",
+                 writer=writer):
 
         self.inputDim = inputDim # number of input neurons
         self.hiddenDim = hiddenDim # number of hidden neurons
@@ -122,6 +121,7 @@ class NNSAE(object):
                   "\t Reconstruction MSE: \t", meanReconstructionError, \
                   "\t Reconstruction Recall: \t", meanReconstructionRecall)
             # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
+            writer.add_scalar('recall/recall' + self.name, meanRecall, self.iteration)
 
     def getRecallError(self, target, pred):
         targetSparse = np.asarray(target).flatten()

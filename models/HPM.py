@@ -25,7 +25,8 @@ class HPM(object):
                         outputDim=numBits)
         self.pooler = NNSAE( inputDim=numBits*4,
                              hiddenDim=numBits,
-                             name=name+"-AE")
+                             name=name+"-AE",
+                             writer= writer)
         self.lr = 0.0001
         self.lower = lower
         self.name = name
@@ -99,7 +100,7 @@ class HPM(object):
                   "\t BCELoss: \t", bce, \
                   "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall)
-            writer.add_scalar('loss/BCE'+self.name, accuracy, self.iteration)
+            writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
 
 
