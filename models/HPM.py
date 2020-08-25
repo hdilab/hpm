@@ -4,6 +4,7 @@ import numpy as np
 from torch import unsqueeze
 from models.NNSAE import NNSAE
 from models.FC import FCML, FC
+from models.CharRNN import CharRNN
 
 class HPM(object):
     def __init__(self,
@@ -16,7 +17,10 @@ class HPM(object):
         super().__init__()
         # self.mlp = FC(inputDim=512,
         #               outputDim=512)
-        self.mlp = FCML(inputDim=numBits*2,
+        # self.net = FCML(inputDim=numBits * 2,
+        #                 hiddenDim=256,
+        #                 outputDim=numBits)
+        self.net = FCML(inputDim=numBits * 2,
                         hiddenDim=256,
                         outputDim=numBits)
         self.pooler = NNSAE( inputDim=numBits*4,
@@ -41,7 +45,7 @@ class HPM(object):
         self.bceloss = [0 for i in range(self.printInterval)]
         self.iteration = 0
 
-        self.opt = torch.optim.Adam(self.mlp.parameters(), lr=self.lr)
+        self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
         self.criterion = nn.BCEWithLogitsLoss()
         # self.criterion = nn.MSELoss(reduction='sum')
     def feed(self, context):
@@ -51,17 +55,17 @@ class HPM(object):
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
             self.actual = torch.tensor(actual.T, dtype=torch.float32)
             # self.mlp.train()
-            self.mlp.zero_grad()
+            self.net.zero_grad()
             # self.opt.zero_grad()
             input = torch.cat((self.prevActual, context), dim=1)
-            self.pred = self.mlp(input)
+            self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
             # if self.iteration % self.printInterval == self.printInterval-1:
             #     print(self.iteration, loss.item())
             self.bceloss[self.iteration % self.printInterval] = loss.item()
 
             loss.backward()
-            nn.utils.clip_grad_norm_(self.mlp.parameters(), 5)
+            nn.utils.clip_grad_norm_(self.net.parameters(), 5)
             self.opt.step()
 
             self.evaluate()
