@@ -1,2 +1,2 @@
-# hpm
-Hierarchical Prediction Memory (HPM)
+# HTM
+Heterarchical Prediction Memory (HPM)
