@@ -18,18 +18,23 @@
 # ----------------------------------------------------------------------
 
 """
-Main experiment 15
-Single Layer Perceptron
+Main experiment 22
+MLP with BCELogit Loss for autoregressive model
+NNSAE for pooler
+Use 4 layers instead of 3 layers in EXP-21
 """
 import numpy as np
 import argparse
-from train_EXP21 import train
-from models.FC import FC
-from torch.utils.data import TensorDataset
-from SDR import SDR
-import torch
+from models.HPM import HPM
 from txtfeeder import TXTFeeder
-torch.manual_seed(42)
+import torch
+import time
+
+localtime = time.asctime(time.localtime(time.time()))
+from tensorboardX import SummaryWriter
+
+writer = SummaryWriter('../runs/exp-22-' + localtime, comment='EXP-22')
+
 
 # Some constants for the experiment
 # Num of bits for the SDR input for character
@@ -59,44 +64,6 @@ parser.add_argument("-s", "--sequence",
                     help="sequence length",
                     default="192")
 args = parser.parse_args()
-
-with open(args.input, 'r') as f:
-    text = f.read()
-
-asc_chars = [chr(i) for i in range(128)]
-chars = tuple(asc_chars)
-int2char = dict(enumerate(chars))
-char2int = {c:i for i, c in int2char.items()}
-
-char_sdr = SDR(asc_chars,
-               numBits=NumBits,
-               numOnBits=NumOnBits,
-               inputNoise=InputNoise)
-
-def multi_hot_encoder(text, n_labels):
-    multi_hot = np.zeros((len(text), n_labels), dtype=np.float32)
-    for i, c in enumerate(text):
-        sdr = char_sdr.getNoisySDR(c)
-        multi_hot[i][np.array(sdr)] = 1
-    return multi_hot
-
-encoded = multi_hot_encoder(text, NumBits)
-
-a = torch.from_numpy(encoded[0:-1, :])
-b = torch.from_numpy(encoded[1:, :])
-
-train_ds = TensorDataset(a, b)
-
-
-# define and print the net
-n_hidden=1024
-n_layers=4
-
-net = FC(inputDim=NumBits)
-print(net)
-
-batch_size = args.batch
-seq_length = args.sequence #max length verses
 n_epochs = args.epoch # start smaller if you are just testing initial behavior
 
 L1feeder = TXTFeeder(args.input,
@@ -104,16 +71,32 @@ L1feeder = TXTFeeder(args.input,
                      numOnBits=NumOnBits,
                      inputNoise=InputNoise)
 
-# train the model
-train.accuracy = 0
-train(net,
-      train_ds,
-      feeder=L1feeder,
-      epochs=n_epochs,
-      batch_size=batch_size,
-      lr=0.0001,
-      print_every=1000,
-      name=args.name,
-      numBits=NumBits,
-      numOnBits=NumOnBits)
+L1 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L1feeder,
+         name="L1",
+         writer=writer)
 
+L2 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L1,
+         name="L2",
+         writer=writer)
+
+L3 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L2,
+         name="L3",
+         writer=writer)
+
+L4 = HPM(numBits=NumBits,
+         numOnBits=NumOnBits,
+         lower=L2,
+         name="L4",
+         writer=writer)
+
+
+randomSDR = torch.rand((1, NumBits))
+
+for i in range(n_epochs):
+    L4.feed(randomSDR)
