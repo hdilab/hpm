@@ -24,7 +24,7 @@ Given a char input, generate SDR
 """
 
 import random
-
+from numpy import zeros
 
 class SDR(object):
     """
@@ -45,12 +45,11 @@ class SDR(object):
                  input_list,
                  numBits=512,
                  numOnBits=10,
-                 seed=42,
                  inputNoise=0.1):
-
-        random.seed(seed)
         self.population = [i for i in range(numBits)]
+        random.seed(42)
         self.numOnBits = numOnBits
+        self.numBits = numBits
         self.inputNoise = inputNoise
         self.sdr_dict = {i:random.sample(self.population, numOnBits) for i in input_list}
 
@@ -65,6 +64,11 @@ class SDR(object):
         noise = random.sample(self.population, int(self.numOnBits * self.inputNoise))
         return inputSDR + noise
 
+    def getDenseFromSparse(self, sparseInput):
+        dense = zeros(self.numBits)
+        dense[sparseInput] = 1
+        dense = dense.reshape(-1,1)
+        return dense
 
 
     def getInput(self, sdr):

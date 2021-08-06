@@ -74,28 +74,28 @@ def train(net,
             loss = criterion(output, targets)
             loss.backward()
             # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-            # nn.utils.clip_grad_norm_(net.parameters(), clip)
+            nn.utils.clip_grad_norm_(net.parameters(), clip)
             opt.step()
 
             # SDR loss
-            net.eval()
+            # net.eval()
             accuracy = accuracySDR(output, targets, numOnBits)
             train.accuracy = 0.999 * train.accuracy + 0.001 * accuracy
 
 
 
-            net.train()
-        if epochs % print_every == 0:
+            # net.train()
+            if counter % print_every == 0:
 
 
-            print(name + ": ",
-                "Epoch: {}/{}...".format(e + 1, epochs),
-                  "Step: {}...".format(counter),
-                  "Loss: {:.4f}...".format(loss.item()),
-                  "SDR Acc: {:.3f}".format(train.accuracy))
+                print(name + ": ",
+                    "Epoch: {}/{}...".format(e + 1, epochs),
+                      "Step: {}...".format(counter),
+                      "Loss: {:.4f}...".format(loss.item()),
+                      "SDR Acc: {:.3f}".format(train.accuracy))
 
-            writer.add_scalar('perf/train_loss' , loss.item(), e)
-            writer.add_scalar('perf/sdr_accuracy', train.accuracy, e)
+                writer.add_scalar('perf/train_loss' , loss.item(), e)
+                writer.add_scalar('perf/sdr_accuracy', train.accuracy, e)
 
 
 

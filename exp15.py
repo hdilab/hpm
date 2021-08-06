@@ -69,7 +69,6 @@ char2int = {c:i for i, c in int2char.items()}
 char_sdr = SDR(asc_chars,
                numBits=NumBits,
                numOnBits=NumOnBits,
-               seed=Seed,
                inputNoise=InputNoise)
 
 def multi_hot_encoder(text, n_labels):
@@ -91,7 +90,7 @@ train_ds = TensorDataset(a, b)
 n_hidden=1024
 n_layers=4
 
-net = FC(numBits=NumBits)
+net = FC(inputDim=NumBits)
 print(net)
 
 batch_size = args.batch
