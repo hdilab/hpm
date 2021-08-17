@@ -91,7 +91,7 @@ L3 = HPM(numBits=NumBits,
 
 L4 = HPM(numBits=NumBits,
          numOnBits=NumOnBits,
-         lower=L2,
+         lower=L3,
          name="L4",
          writer=writer)
 
