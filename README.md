@@ -5,10 +5,14 @@ Heterarchical Prediction Memory (HPM)
 ## Environment
 - python 2.7
 
-## Experiment #23
-- Compare the performance with LSTM char rnn
 
-## Experiment #21 
+## Experiment History
+
+### Experiment #23
+- Compare the performance with min char rnn
+- Bit per character: 1.53
+
+### Experiment #21 
 - Used NNASE for sparse autoencoder
 - To replicate 
 
