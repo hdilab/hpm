@@ -40,8 +40,7 @@ class NNSAE(object):
     def __init__(self,
                  inputDim=2048,
                  hiddenDim=512,
-                 name="NNSAE",
-                 writer=None):
+                 name="NNSAE"):
 
         self.inputDim = inputDim # number of input neurons
         self.hiddenDim = hiddenDim # number of hidden neurons
@@ -77,12 +76,11 @@ class NNSAE(object):
         self.reconstructionErrors = [0 for i in range(self.printInterval)]
         self.reconstructionRecalls = [0 for i in range(self.printInterval)]
         self.iteration = 0
-        self.writer = writer
 
-    def pool(self, X):
+    def pool(self, X, writer):
         self.inp = np.expand_dims(X, axis=1)
         self.forward()
-        self.evaluate()
+        self.evaluate(writer)
         self.update()
         self.iteration += 1
         return self.h
@@ -99,7 +97,7 @@ class NNSAE(object):
         # read-out
         self.out = self.W * self.h
 
-    def evaluate(self):
+    def evaluate(self, writer):
         self.losses[self.iteration % self.printInterval] = \
             self.getMSE(self.inp, self.out)
         self.recalls[self.iteration % self.printInterval] = \
@@ -122,7 +120,7 @@ class NNSAE(object):
                   "\t Reconstruction MSE: \t", meanReconstructionError, \
                   "\t Reconstruction Recall: \t", meanReconstructionRecall)
             # writer.add_scalar('accuracy/loss', accuracy, self.iteration)
-            self.writer.add_scalar('recall/recall' + self.name, meanRecall, self.iteration)
+            writer.add_scalar('recall/recall' + self.name, meanRecall, self.iteration)
 
     def getRecallError(self, target, pred):
         targetSparse = np.asarray(target).flatten()

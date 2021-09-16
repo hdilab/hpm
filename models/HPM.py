@@ -11,8 +11,7 @@ class HPM(object):
                  numBits=512,
                  numOnBits=10,
                  lower=None,
-                 name="layer",
-                 writer=None):
+                 name="layer"):
 
         super().__init__()
         # self.mlp = FC(inputDim=512,
@@ -25,9 +24,7 @@ class HPM(object):
                         outputDim=numBits)
         self.pooler = NNSAE( inputDim=numBits*4,
                              hiddenDim=numBits,
-                             name=name+"-AE",
-                             writer= writer)
-        self.writer=writer
+                             name=name+"-AE")
         self.lr = 0.0001
         self.lower = lower
         self.name = name
@@ -37,7 +34,7 @@ class HPM(object):
         self.actual = torch.rand((1, numBits)) # vector holding current input
         self.pred = torch.rand((1, numBits)) # vector holding current input
 
-        self.printInterval = 1000
+        self.printInterval = 10000
         self.losses = [ 0 for i in range(self.printInterval)]
         self.recalls = [0 for i in range(self.printInterval)]
         self.reconstructionErrors = [0 for i in range(self.printInterval)]
@@ -48,10 +45,10 @@ class HPM(object):
         self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
         self.criterion = nn.BCEWithLogitsLoss()
         # self.criterion = nn.MSELoss(reduction='sum')
-    def feed(self, context):
+    def feed(self, context, writer):
         output = []
         for i in range(4):
-            actual =  self.lower.feed(self.prevActual)
+            actual =  self.lower.feed(self.prevActual, writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
             self.actual = torch.tensor(actual.T, dtype=torch.float32)
             # self.mlp.train()
@@ -68,21 +65,21 @@ class HPM(object):
             nn.utils.clip_grad_norm_(self.net.parameters(), 5)
             self.opt.step()
 
-            self.evaluate()
+            self.evaluate(writer)
             self.prevActual = self.actual.detach()
             output.append(self.actual.squeeze().numpy())
             self.iteration += 1
         output = np.concatenate(output)
-        output = self.pooler.pool(output)
+        output = self.pooler.pool(output, writer)
         return output
 
 
 
-    def evaluate(self):
+    def evaluate(self,writer):
         actual = self.actual.detach().numpy()
         pred = self.pred.detach().numpy()
-        self.losses[self.iteration%self.printInterval] = \
-            self.getMSE(actual, pred)
+        # self.losses[self.iteration%self.printInterval] = \
+        #     self.getMSE(actual, pred)
         self.recalls[self.iteration % self.printInterval] = \
             self.getRecallError(actual, pred)
         # reconstructPred = self.getReconstruction()
@@ -101,8 +98,8 @@ class HPM(object):
                   "\t BCELoss: \t", bce, \
                   "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall)
-            self.writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
-            self.writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
+            writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
+            writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
 
 
     def getRecallError(self, target, pred):

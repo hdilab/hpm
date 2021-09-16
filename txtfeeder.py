@@ -74,7 +74,7 @@ class TXTFeeder(Feeder):
                             inputNoise=inputNoise)
         self.readIndex = -1
 
-    def feed(self, context):
+    def feed(self, context, writer):
         if self.readIndex < len(self.char_list)-1:
             self.readIndex = self.readIndex + 1
         else:

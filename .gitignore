@@ -1,4 +1,5 @@
 .idea/
+*.pt
 *.net 
 *.nosetests
 model.pkl
