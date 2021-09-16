@@ -5,6 +5,8 @@ Heterarchical Prediction Memory (HPM)
 ## Environment
 - python 2.7
 
+## Experiment #23
+- Compare the performance with LSTM char rnn
 
 ## Experiment #21 
 - Used NNASE for sparse autoencoder
