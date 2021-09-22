@@ -45,10 +45,10 @@ class HPM(object):
         self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
         self.criterion = nn.BCEWithLogitsLoss()
         # self.criterion = nn.MSELoss(reduction='sum')
-    def feed(self, context, writer):
+    def feed(self, context = None, writer=None):
         output = []
         for i in range(4):
-            actual =  self.lower.feed(self.prevActual, writer)
+            actual =  self.lower.feed(context=self.prevActual, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
             self.actual = torch.tensor(actual.T, dtype=torch.float32)
             # self.mlp.train()

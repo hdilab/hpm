@@ -63,18 +63,16 @@ class TXTFeeder(Feeder):
                  inputFileName,
                  numBits=512,
                  numOnBits=10,
-                 inputNoise=0.1):
+                 inputNoise=0.1,
+                 SDR=None):
 
         Feeder.__init__(self, numBits, numOnBits, inputNoise)
         self.char_list = [char for char in open(inputFileName).read()]
-        asc_chars = [chr(i) for i in range(128)]
-        self.char_sdr = SDR(asc_chars,
-                            numBits=numBits,
-                            numOnBits=numOnBits,
-                            inputNoise=inputNoise)
+
+        self.char_sdr = SDR
         self.readIndex = -1
 
-    def feed(self, context, writer):
+    def feed(self, context=None, writer=None):
         if self.readIndex < len(self.char_list)-1:
             self.readIndex = self.readIndex + 1
         else:
