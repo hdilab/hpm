@@ -172,8 +172,8 @@ for i in range(n_epochs):
 
         testLoss /= numTestCharacter
         trainLoss /= TestInterval
-        print('epoch [{}/{}], Test Loss:{:.4f}'
-                  .format(i + 1, n_epochs, testLoss ))
+        print('epoch [{}/{}], Test Loss:{:.6f},  Train Loss:{:.6f}'
+                  .format(i + 1, n_epochs, testLoss, trainLoss ))
         writer.add_scalar('test loss/SimpleAE-BCE', testLoss, i)
         writer.add_scalar('train loss/SimpleAE-BCE', trainLoss, i)
         trainLoss = 0.0
