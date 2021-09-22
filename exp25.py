@@ -85,7 +85,7 @@ n_layers = args.layers
 
 
 
-writer = SummaryWriter('../runs/exp-25-' + str(n_layers) + ' ' + localtime, comment='EXP-25 Layer'+str(n_layers))
+writer = SummaryWriter('../runs/exp-25-' + ' ' + localtime, comment='EXP-25 Layer'+str(n_layers))
 os.makedirs('./save', exist_ok=True)
 archiveFilePath = './save/exp-25-' + str(n_layers) + ' ' + localtime + '.pt'
 
