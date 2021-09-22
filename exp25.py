@@ -180,5 +180,6 @@ for i in range(n_epochs):
         writer.add_histogram('AE.output', recon, i)
         writer.add_histogram('AE.input', input, i)
         topValues, topIndices = torch.topk(recon, NumOnBits*8)
+        topValues = torch.sigmoid(topValues)
         writer.add_histogram('AE.output.TopValues', topValues,i)
 
