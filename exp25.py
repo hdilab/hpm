@@ -48,7 +48,7 @@ SaveInterval = 10000
 TestInterval = 1000
 learning_rate = 1e-3
 inputNoise = 0.1
-
+numTestCharacter = 10000
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
                     help="input text file you want to use for training",
@@ -89,9 +89,7 @@ writer = SummaryWriter('../runs/exp-25-' + str(n_layers) + ' ' + localtime, comm
 os.makedirs('./save', exist_ok=True)
 archiveFilePath = './save/exp-25-' + str(n_layers) + ' ' + localtime + '.pt'
 
-testData = open('data/shakespeare.txt', 'r').read()
-# numTestCharacter = len(testData)
-numTestCharacter = 10000
+
 
 asc_chars = [chr(i) for i in range(128)]
 char_sdr = SDR(asc_chars,
@@ -177,4 +175,8 @@ for i in range(n_epochs):
         writer.add_scalar('test loss/SimpleAE-BCE', testLoss, i)
         writer.add_scalar('train loss/SimpleAE-BCE', trainLoss, i)
         trainLoss = 0.0
+        writer.add_histogram('AE.decoder.linear2.weight',AE.decoder[2].weight, i)
+        writer.add_histogram('AE.decoder.linear2.bias', AE.decoder[2].bias, i)
+        writer.add_histogram('AE.output', recon, i)
+        writer.add_histogram('AE.input', input, i)
 
