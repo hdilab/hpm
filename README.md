@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #25
+- Build Sparse Binary Autoencoder
+
 ### Experiment #24
 - Use input argument to set the number of layers
 - Use script to run multiple condition with number of layers
