@@ -184,5 +184,5 @@ for i in range(n_epochs):
         writer.add_histogram('AE.output', recon, i)
         writer.add_histogram('AE.input', input, i)
 
-        writer.add_histogram('AE.output.TopValues', topValues,i)
+        writer.add_histogram('AE.output.TopValues', topValuesHistory,i)
 
