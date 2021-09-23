@@ -155,6 +155,7 @@ for i in range(n_epochs):
 
     if i % TestInterval == 0:
         testLoss = 0.0;
+        topValuesHistory = torch.zeros(numTestCharacter, NumOnBits*8)
         with torch.no_grad():
             for j in range(numTestCharacter):
                 input = []
@@ -165,6 +166,9 @@ for i in range(n_epochs):
                 input = torch.tensor(input)
                 input = torch.reshape(input, (1, -1))
                 recon = AE(input)
+                topValues, topIndices = torch.topk(recon, NumOnBits * 8)
+                topValues = torch.sigmoid(topValues)
+                topValuesHistory[j,:] = topValues
                 loss = criterion(recon, input)
                 testLoss += loss
 
@@ -179,7 +183,6 @@ for i in range(n_epochs):
         writer.add_histogram('AE.decoder.linear2.bias', AE.decoder[2].bias, i)
         writer.add_histogram('AE.output', recon, i)
         writer.add_histogram('AE.input', input, i)
-        topValues, topIndices = torch.topk(recon, NumOnBits*8)
-        topValues = torch.sigmoid(topValues)
+
         writer.add_histogram('AE.output.TopValues', topValues,i)
 
