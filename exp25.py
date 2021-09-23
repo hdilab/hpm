@@ -137,7 +137,7 @@ for i in range(n_epochs):
         input.extend(signal)
     input = torch.tensor(input)
     input = torch.reshape(input, (1,-1))
-    recon = AE(input)
+    recon, emb = AE(input)
     loss = criterion(recon, input)
     trainLoss += loss.item()
     optimizer.zero_grad()
@@ -166,7 +166,7 @@ for i in range(n_epochs):
                     input.extend(signal)
                 input = torch.tensor(input)
                 input = torch.reshape(input, (1, -1))
-                recon = AE(input)
+                recon, emb = AE(input)
                 topValues, topIndices = torch.topk(recon, NumOnBits * 8)
                 topValues = torch.sigmoid(topValues)
                 topValuesHistory[j,:] = topValues
@@ -196,6 +196,6 @@ for i in range(n_epochs):
         writer.add_histogram('AE.decoder.linear2.bias', AE.decoder[2].bias, i)
         writer.add_histogram('AE.output', recon, i)
         writer.add_histogram('AE.input', input, i)
-
+        writer.add_histogram('AE.embedding', emb, i)
         writer.add_histogram('AE.output.TopValues', topValuesHistory, i)
 

@@ -22,7 +22,7 @@ class autoencoder(nn.Module):
             nn.Linear(numBits*2, numBits*4))
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        emb = self.encoder(x)
+        x = self.decoder(emb)
+        return x, emb
 
