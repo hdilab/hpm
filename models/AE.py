@@ -8,10 +8,12 @@ class autoencoder(nn.Module):
 
     def __init__(self,
                  numBits=512,
-                 name='SimpleAE'):
+                 name='kWTA_AE',
+                 numOnBits=10):
         super().__init__()
 
         self.numBits = numBits
+        self.numOnBits = numOnBits
         self.encoder = nn.Sequential(
             nn.Linear(numBits*4, numBits*2),
             nn.ReLU(True),
@@ -23,6 +25,12 @@ class autoencoder(nn.Module):
 
     def forward(self, x):
         emb = self.encoder(x)
-        x = self.decoder(emb)
-        return x, emb
+        k = self.numOnBits
+        tmpx = emb.view(x.shape[0], -1)
+        topval = tmpx.topk(k, dim=1)[0][:, -1]
+        topval = topval.repeat(tmpx.shape[1], 1).permute(1, 0).view_as(emb)
+        comp = (emb >= topval).to(emb)
+        sparseEmb = comp
+        x = self.decoder(sparseEmb)
+        return x, sparseEmb
 
