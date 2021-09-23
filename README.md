@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #26
+- Use kWTA layer to build a sparse embedding
+
 ### Experiment #25
 - Build Sparse Binary Autoencoder
 
