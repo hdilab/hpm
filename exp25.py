@@ -150,11 +150,12 @@ for i in range(n_epochs):
                    'optimizer_state_dict': optimizer.state_dict(),
                    'loss': loss}
         torch.save(archive, archiveFilePath)
-        print('Save file: epoch [{}/{}], loss:{:.4f}'
-              .format(i + 1, n_epochs, loss.item()))
+        print('Save file: epoch [{}/{}]'
+              .format(i + 1, n_epochs))
 
     if i % TestInterval == 0:
         testLoss = 0.0;
+        recall = 0.0
         topValuesHistory = torch.zeros(numTestCharacter, NumOnBits*8)
         with torch.no_grad():
             for j in range(numTestCharacter):
@@ -169,20 +170,32 @@ for i in range(n_epochs):
                 topValues, topIndices = torch.topk(recon, NumOnBits * 8)
                 topValues = torch.sigmoid(topValues)
                 topValuesHistory[j,:] = topValues
+
+                _, topIndices = torch.topk(recon, NumOnBits * 4)
+                _, inputIndices = torch.topk(input, NumOnBits *4)
+
+                listInput = inputIndices.tolist()[0]
+                setInput = set(listInput)
+                listTopIndices = topIndices.tolist()[0]
+                setTopIndices = set(listTopIndices)
+                intersection = setInput.intersection(setTopIndices)
+                recall += len(intersection)/ len(setInput)
                 loss = criterion(recon, input)
                 testLoss += loss
 
         testLoss /= numTestCharacter
         trainLoss /= TestInterval
-        print('epoch [{}/{}], Test Loss:{:.6f},  Train Loss:{:.6f}'
-                  .format(i + 1, n_epochs, testLoss, trainLoss ))
-        writer.add_scalar('test loss/SimpleAE-BCE', testLoss, i)
-        writer.add_scalar('train loss/SimpleAE-BCE', trainLoss, i)
+        recall /= numTestCharacter
+        print('epoch [{}/{}], Test Loss:{:.6f},  Train Loss:{:.6f}, Recall:{:.6f}'
+                  .format(i + 1, n_epochs, testLoss, trainLoss, recall ))
+        writer.add_scalar('test.loss/SimpleAE-BCE', testLoss, i)
+        writer.add_scalar('train.loss/SimpleAE-BCE', trainLoss, i)
+        writer.add_scalar('test.recall/SimpleAE-Recall', recall, i)
         trainLoss = 0.0
         writer.add_histogram('AE.decoder.linear2.weight',AE.decoder[2].weight, i)
         writer.add_histogram('AE.decoder.linear2.bias', AE.decoder[2].bias, i)
         writer.add_histogram('AE.output', recon, i)
         writer.add_histogram('AE.input', input, i)
 
-        writer.add_histogram('AE.output.TopValues', topValuesHistory,i)
+        writer.add_histogram('AE.output.TopValues', topValuesHistory, i)
 
