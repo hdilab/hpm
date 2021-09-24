@@ -119,7 +119,7 @@ else:
     optimizer = torch.optim.Adam(AE.parameters(),
                                  lr=learning_rate,
                                  weight_decay=1e-5)
-    optimizer.load_state_dict(archive['optimizer'])
+    optimizer.load_state_dict(archive['optimizer_state_dict'])
     loss = archive['loss']
 
 trainLoss = 0.0
