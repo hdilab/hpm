@@ -24,6 +24,7 @@ Given a char input, generate SDR
 """
 
 import random
+import numpy as np
 from numpy import zeros
 
 class SDR(object):
@@ -53,6 +54,7 @@ class SDR(object):
         self.numBits = numBits
         self.inputNoise = inputNoise
         self.sdr_dict = {i:random.sample(self.population, numOnBits) for i in input_list}
+        self.inputList = input_list
 
 
     def getSDR(self, input):
@@ -71,13 +73,25 @@ class SDR(object):
         dense = dense.reshape(-1,1)
         return dense
 
+    def getSparseFromDense(self, denseInput):
+        sparse = ( denseInput > 0 ).nonzero()
+        return sparse
 
-    def getInput(self, sdr):
+
+
+    def getInput(self, denseSDR):
         """
         Need to implement the function which returns the corresponding input from SDR
         This requires a probabilistic approach. Count the number of overlapping bit and nonoverlapping field.
         """
-        return 0
+        count = {i:0 for i in self.inputList }
+        sparseSDR = self.getSparseFromDense(denseSDR)[0]
+        for b in sparseSDR:
+            for c in self.inputList:
+                if b in self.sdr_dict[c]:
+                    count[c] += 1
+        prediction = max(count, key=count.get)
+        return prediction
 
     def getCollisionProb(self, n, a, s, theta):
         """
