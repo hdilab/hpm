@@ -47,7 +47,7 @@ SaveInterval = 100000
 TestInterval = 100000
 learning_rate = 1e-3
 inputNoise = 0.1
-numTestCharacter = 400000
+numTestCharacter = 50000
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
                     help="input text file you want to use for training",
