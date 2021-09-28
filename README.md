@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #29
+- Use kWTA for continuous embedding but close to 1 with custom loss
+
+
 ### Experiment #28
 - Improve the character level accuracy of EXP-26
 - Use kWTA for continuous embedding in hidden layers instead of ReLU
