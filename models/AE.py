@@ -112,3 +112,10 @@ class kWTA_autoencoder(nn.Module):
         emb = self.kWTA(out)
         x = self.decoder(emb)
         return x, emb
+
+    def testBinaryEmbedding(self, x):
+        out = self.encoder(x)
+        emb = self.kWTA(out)
+        binaryEmb = (emb != 0).to(emb)
+        x = self.decoder(binaryEmb)
+        return x, binaryEmb

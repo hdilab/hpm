@@ -43,11 +43,11 @@ NumOnBits = 10
 NumBits = 512
 Seed = 42
 InputNoise = 0.1
-SaveInterval = 5000
-TestInterval = 5000
+SaveInterval = 50000
+TestInterval = 1000
 learning_rate = 1e-3
 inputNoise = 0.1
-numTestCharacter = 5000
+numTestCharacter = 1000
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
                     help="input text file you want to use for training",
@@ -124,6 +124,8 @@ else:
 trainLoss = 0.0
 accuracy = 0.0
 criterion = nn.BCEWithLogitsLoss()
+
+startTrainingTime = time.time()
 for i in range(n_epochs):
     input = []
     for _ in range(4):
@@ -135,7 +137,7 @@ for i in range(n_epochs):
     recon, emb = AE(input)
     # loss = torch.sum(recon * input) + torch.sum(emb)
     # loss = torch.sum(recon *input)
-    binaryEmb = (emb == 0).to(emb)
+    binaryEmb = (emb != 0).to(emb)
     loss = criterion(recon, input) + torch.sum(torch.abs(binaryEmb - emb))
     trainLoss += loss.item()
     optimizer.zero_grad()
@@ -152,6 +154,7 @@ for i in range(n_epochs):
               .format(i + 1, n_epochs))
 
     if i % TestInterval == 0:
+        startTestTime = time.time()
         testLoss = 0.0;
         recall = 0.0
         topValuesHistory = torch.zeros(numTestCharacter, NumOnBits*8)
@@ -165,7 +168,7 @@ for i in range(n_epochs):
                     input.extend(signal)
                 input = torch.tensor(input)
                 input = torch.reshape(input, (1, -1))
-                recon, emb = AE(input)
+                recon, emb = AE.testBinaryEmbedding(input)
                 topValues, topIndices = torch.topk(recon, NumOnBits * 8)
                 topValues = torch.sigmoid(topValues)
                 topValuesHistory[j,:] = topValues
@@ -210,8 +213,13 @@ for i in range(n_epochs):
         trainLoss /= TestInterval
         recall /= numTest
         accuracy /= numTestCharacter
-        print('epoch [{}/{}], Test Loss:{:.6f},  Train Loss:{:.6f}, Recall:{:.6f}, Accuracy:{:6f}'
-                  .format(i + 1, n_epochs, testLoss, trainLoss, recall, accuracy ))
+        endTestTime = time.time()
+        trainingTime = int(startTestTime - startTrainingTime)
+        testTime = int(endTestTime - startTestTime)
+        startTrainingTime = time.time()
+
+        print('epoch [{}/{}], Test Loss:{:.6f},  Train Loss:{:.6f}, Recall:{:.6f}, Accuracy:{:6f} Training Time:{} Test Time: {}'
+                  .format(i + 1, n_epochs, testLoss, trainLoss, recall, accuracy, trainingTime, testTime ))
         writer.add_scalar('test/AE-BCE', testLoss, i)
         writer.add_scalar('train/AE-BCE', trainLoss, i)
         writer.add_scalar('test/AE-Recall', recall, i)
@@ -223,4 +231,7 @@ for i in range(n_epochs):
         writer.add_histogram('AE.input', input, i)
         writer.add_histogram('AE.embedding', emb, i)
         writer.add_histogram('AE.output.TopValues', topValuesHistory, i)
+
+
+
 
