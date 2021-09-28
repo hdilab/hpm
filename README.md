@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #27
+- Improve the character level accuracy of EXP-26
+- Use kWTA in hidden layers instead of ReLU
+
 ### Experiment #26
 - Use kWTA layer to build a sparse embedding
 
