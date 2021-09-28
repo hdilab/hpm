@@ -2,7 +2,7 @@
 # Source code from https://github.com/L1aoXingyu/pytorch-beginner/blob/master/08-AutoEncoder/simple_autoencoder.py
 
 from torch import nn
-
+from models.kWTA import Sparsify1D
 
 class autoencoder(nn.Module):
 
@@ -85,3 +85,30 @@ class simple_autoencoder2(nn.Module):
         decoderL2input = nn.functional.relu(decoderL1out)
         decoderL2out = self.decoderL2(decoderL2input)
         return decoderL2out, L2out
+
+
+class kWTA_autoencoder(nn.Module):
+
+    def __init__(self,
+                 numBits=512,
+                 name='kWTA autoencoder',
+                 numOnBits=10):
+        super().__init__()
+
+        self.numBits = numBits
+        self.numOnBits = numOnBits
+        self.encoder = nn.Sequential(
+            nn.Linear(numBits*4, numBits*2),
+            nn.ReLU(True),
+            nn.Linear(numBits*2, numBits))
+        self.decoder = nn.Sequential(
+            nn.Linear(numBits, numBits*2),
+            nn.ReLU(True),
+            nn.Linear(numBits*2, numBits*4))
+        self.kWTA = Sparsify1D(numOnBits)
+
+    def forward(self, x):
+        out = self.encoder(x)
+        emb = self.kWTA(out)
+        x = self.decoder(emb)
+        return x, emb
