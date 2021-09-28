@@ -123,6 +123,15 @@ else:
     loss = archive['loss']
 
 trainLoss = 0.0
+input = []
+for _ in range(4):
+    signal = trainFeeder.feed()
+    signal = np.squeeze(signal).tolist()
+    input.extend(signal)
+input = torch.tensor(input)
+input = torch.reshape(input, (1, -1))
+writer.add_graph(AE, input)
+
 for i in range(n_epochs):
     input = []
     for _ in range(4):
