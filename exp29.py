@@ -43,11 +43,11 @@ NumOnBits = 10
 NumBits = 512
 Seed = 42
 InputNoise = 0.1
-SaveInterval = 10000
-TestInterval = 10000
+SaveInterval = 5000
+TestInterval = 5000
 learning_rate = 1e-3
 inputNoise = 0.1
-numTestCharacter = 10000
+numTestCharacter = 5000
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
                     help="input text file you want to use for training",
