@@ -1,8 +1,5 @@
 from torch import nn
 import torch
-import numpy as np
-from torch import unsqueeze
-from models.NNSAE import NNSAE
 torch.manual_seed(42)
 
 # writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
@@ -38,7 +35,7 @@ class FC(nn.Module):
 
 class FCML(nn.Module):
     def __init__(self,
-                 inputDim=1024,
+                 inputDim=512,
                  hiddenDim=256,
                  outputDim=512):
         super().__init__()
