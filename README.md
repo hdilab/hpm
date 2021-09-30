@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #30
+- Test of AR module with 2 FC layers
+
 ### Experiment #29
 - Use kWTA for continuous embedding but close to 1 with custom loss
 
