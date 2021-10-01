@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #31
+- Using 3 Layer LSTM
+
 ### Experiment #30
 - Test of AR module with 2 FC layers
 
