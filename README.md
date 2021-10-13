@@ -8,8 +8,13 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #32
+- HTM with kWTA AE 
+- For AR, use simple FC 
+
 ### Experiment #31
 - Using 3 Layer LSTM
+- To be continued after EXP-32
 
 ### Experiment #30
 - Test of AR module with 2 FC layers
