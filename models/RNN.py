@@ -1,0 +1,50 @@
+from torch import nn
+import torch
+
+torch.manual_seed(42)
+
+# writer = SummaryWriter('runs/exp-2', comment='Single layer, Non-overlapping text')
+
+class RNN(nn.Module):
+    def __init__(self,
+                 numBits=512,
+                 numOnBits=10):
+        super().__init__()
+        self.fc = nn.Linear(numBits, numBits)
+        self.numOnBits = numOnBits
+
+    def forward(self, x):
+        out = self.fc(x)
+        topval = out.topk(self.numOnBits, dim=1)[0][:,-1]
+        topval = topval.repeat(out.shape[1], 1).permute(1,0).view_as(out)
+        comp = (out>=topval).to(out)
+        return comp
+
+
+class FC(nn.Module):
+    def __init__(self,
+                 inputDim=512,
+                 outputDim=512):
+        super().__init__()
+        self.fc = nn.Linear(inputDim, outputDim)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        out = self.fc(x)
+        # out = torch.sigmoid(out)
+        return out
+
+class FCML(nn.Module):
+    def __init__(self,
+                 inputDim=512,
+                 hiddenDim=256,
+                 outputDim=512):
+        super().__init__()
+        self.fc1 = nn.Linear(inputDim, hiddenDim)
+        self.fc2 = nn.Linear(hiddenDim, outputDim)
+
+    def forward(self, x):
+        a = self.fc1(x)
+        h = torch.sigmoid(a)
+        out = self.fc2(h)
+        return out
