@@ -1,10 +1,8 @@
 from torch import nn
 import torch
 import numpy as np
-from torch import unsqueeze
-from models.NNSAE import NNSAE
+from models.AE import kWTA_autoencoder
 from models.FC import FCML, FC
-from models.CharRNN import CharRNN
 
 class HPM(object):
     def __init__(self,
@@ -22,9 +20,11 @@ class HPM(object):
         self.net = FCML(inputDim=numBits * 2,
                         hiddenDim=256,
                         outputDim=numBits)
-        self.pooler = NNSAE( inputDim=numBits*4,
-                             hiddenDim=numBits,
-                             name=name+"-AE")
+        # self.pooler = NNSAE( inputDim=numBits*4,
+        #                      hiddenDim=numBits,
+        #                      name=name+"-AE")
+        self.pooler = kWTA_autoencoder(numBits=numBits,
+                                       name=name+"-AE")
         self.lr = 0.0001
         self.lower = lower
         self.name = name
@@ -43,14 +43,14 @@ class HPM(object):
         self.iteration = 0
 
         self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = nn.BCELoss()
         # self.criterion = nn.MSELoss(reduction='sum')
     def feed(self, context = None, writer=None):
         output = []
         for i in range(4):
             actual =  self.lower.feed(context=self.prevActual, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
-            self.actual = torch.tensor(actual.T, dtype=torch.float32)
+            self.actual = torch.tensor(actual, dtype=torch.float32)
             # self.mlp.train()
             self.net.zero_grad()
             # self.opt.zero_grad()
@@ -70,8 +70,10 @@ class HPM(object):
             output.append(self.actual.squeeze().numpy())
             self.iteration += 1
         output = np.concatenate(output)
-        output = self.pooler.pool(output, writer)
-        return output
+        pooler_input = torch.tensor(output)
+        pooler_input = torch.reshape(pooler_input, (1,-1))
+        pooler_output = self.pooler.pool(pooler_input, writer)
+        return pooler_output.numpy()
 
 
 

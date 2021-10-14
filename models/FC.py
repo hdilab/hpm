@@ -46,4 +46,5 @@ class FCML(nn.Module):
         a = self.fc1(x)
         h = torch.sigmoid(a)
         out = self.fc2(h)
-        return out
+        sigout = torch.sigmoid(out)
+        return sigout

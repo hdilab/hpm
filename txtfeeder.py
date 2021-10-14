@@ -80,7 +80,7 @@ class TXTFeeder(Feeder):
         inputChar = self.char_list[self.readIndex]
         sparseSDR = self.char_sdr.getNoisySDR(inputChar)
         inputSDR = self.char_sdr.getDenseFromSparse(sparseSDR)
-        return inputSDR
+        return inputSDR.T
 
     def evaluatePrediction(self, inputChar, prediction):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]

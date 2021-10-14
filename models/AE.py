@@ -3,6 +3,7 @@
 
 from torch import nn
 from models.kWTA import Sparsify1D
+import torch
 
 class autoencoder(nn.Module):
 
@@ -95,6 +96,7 @@ class kWTA_autoencoder(nn.Module):
                  numOnBits=10):
         super().__init__()
 
+        learningRate = 1e-3
         self.numBits = numBits
         self.numOnBits = numOnBits
         self.encoder = nn.Sequential(
@@ -106,6 +108,10 @@ class kWTA_autoencoder(nn.Module):
             nn.ReLU(True),
             nn.Linear(numBits*2, numBits*4))
         self.kWTA = Sparsify1D(numOnBits)
+        self.criterion = nn.BCEWithLogitsLoss()
+        self.optimizer = torch.optim.Adam(self.parameters(),
+                                     lr=learningRate,
+                                     weight_decay=1e-5)
 
     def forward(self, x):
         out = self.encoder(x)
@@ -119,3 +125,15 @@ class kWTA_autoencoder(nn.Module):
         binaryEmb = (emb != 0).to(emb)
         x = self.decoder(binaryEmb)
         return x, binaryEmb
+
+    def pool(self, x, writer):
+        recon, emb = self.forward(x)
+        binaryEmb = (emb != 0).to(emb)
+        loss = self.criterion(recon, x) + torch.sum(torch.abs(binaryEmb - emb))
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        # self.evaluate(writer)
+        # self.update()
+        # self.iteration += 1
+        return binaryEmb
