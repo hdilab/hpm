@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from models.AE import kWTA_autoencoder
 from models.FC import FCML, FC
+import time
 
 class HPM(object):
     def __init__(self,
@@ -45,6 +46,7 @@ class HPM(object):
 
         self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
         self.criterion = nn.BCELoss()
+        self.startTime = time.time()
         # self.criterion = nn.MSELoss(reduction='sum')
     def feed(self, context = None, writer=None):
         output = []
@@ -99,11 +101,16 @@ class HPM(object):
             # accuracy = np.mean(self.losses)
             meanRecall = np.mean(self.recalls)
             bce = np.mean(self.bceloss)
+            currentTestTime = time.time()
+            trainTime = int(currentTestTime - self.startTime)
+            self.startTime = currentTestTime
+
             print(self.name, \
                   "\t Iteration: \t", self.iteration, \
                   "\t BCELoss: \t", bce, \
                   # "\t MSE: \t",  accuracy, \
-                  "\t Recall: \t",  meanRecall)
+                  "\t Recall: \t",  meanRecall,
+                  "\t Training Time: \t", trainTime)
             writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
 
@@ -119,7 +126,15 @@ class HPM(object):
         predSparse = list(predSparse)
         intersection = [i for i in targetIdx if i in predSparse]
         recall = len(intersection) / (numTarget + 0.0001)
+        # if recall > 0.99:
+        #     print("Hello ", self.name)
         return recall
+
+    def getSortedIndex(self, target):
+        targetSparse = target[0]
+        targetIdx = np.where(targetSparse > 0.1)
+        sorted = np.sort(targetIdx)
+        return sorted
 
     def getReconstruction(self):
         ind = np.argsort(self.h, axis=0)[-10:]
@@ -137,4 +152,5 @@ class HPM(object):
         topVal = dense.topk(k)[0][:,-1]
         sparseBinary = (dense>=topVal).to(dense)
         return sparseBinary
+
 
