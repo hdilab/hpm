@@ -42,6 +42,7 @@ NumBits = 512
 Seed = 42
 InputNoise = 0.1
 SaveInterval = 10000
+TestInterval = 50000
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
@@ -138,3 +139,4 @@ for i in range(n_epochs):
                    'randomSDR': randomSDR,
                    'L1feeder': L1feeder}
         torch.save(archive, archiveFilePath)
+

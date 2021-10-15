@@ -30,11 +30,12 @@ class HPM(object):
         self.name = name
         self.numBits = numBits
         self.numOnBits = numOnBits
-        self.prevActual = torch.rand((1, numBits)) # vector holding current input
-        self.actual = torch.rand((1, numBits)) # vector holding current input
-        self.pred = torch.rand((1, numBits)) # vector holding current input
+        self.prevActual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
+        self.actual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
+        self.pred = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
 
-        self.printInterval = 10000
+
+        self.printInterval = 5000
         self.losses = [ 0 for i in range(self.printInterval)]
         self.recalls = [0 for i in range(self.printInterval)]
         self.reconstructionErrors = [0 for i in range(self.printInterval)]
@@ -48,12 +49,12 @@ class HPM(object):
     def feed(self, context = None, writer=None):
         output = []
         for i in range(4):
-            actual =  self.lower.feed(context=self.prevActual, writer=writer)
+            actual =  self.lower.feed(context=self.pred, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
             self.actual = torch.tensor(actual, dtype=torch.float32)
             # self.mlp.train()
-            self.net.zero_grad()
-            # self.opt.zero_grad()
+            # self.net.zero_grad()
+            self.opt.zero_grad()
             input = torch.cat((self.prevActual, context), dim=1)
             self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
@@ -62,10 +63,13 @@ class HPM(object):
             self.bceloss[self.iteration % self.printInterval] = loss.item()
 
             loss.backward()
-            nn.utils.clip_grad_norm_(self.net.parameters(), 5)
+            # nn.utils.clip_grad_norm_(self.net.parameters(), 5)
             self.opt.step()
 
+            self.pred = self.pred.detach()
+            self.pred = self.getSparseBinary(self.pred, self.numOnBits)
             self.evaluate(writer)
+
             self.prevActual = self.actual.detach()
             output.append(self.actual.squeeze().numpy())
             self.iteration += 1
@@ -92,13 +96,13 @@ class HPM(object):
 
 
         if self.iteration % self.printInterval  == 0:
-            accuracy = np.mean(self.losses)
+            # accuracy = np.mean(self.losses)
             meanRecall = np.mean(self.recalls)
             bce = np.mean(self.bceloss)
             print(self.name, \
                   "\t Iteration: \t", self.iteration, \
                   "\t BCELoss: \t", bce, \
-                  "\t MSE: \t",  accuracy, \
+                  # "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall)
             writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
@@ -128,4 +132,9 @@ class HPM(object):
         error = target - pred
         loss = (error.T @ error) / self.numBits
         return loss
+
+    def getSparseBinary(self, dense, k):
+        topVal = dense.topk(k)[0][:,-1]
+        sparseBinary = (dense>=topVal).to(dense)
+        return sparseBinary
 
