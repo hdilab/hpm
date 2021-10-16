@@ -87,6 +87,8 @@ class simple_autoencoder2(nn.Module):
         decoderL2out = self.decoderL2(decoderL2input)
         return decoderL2out, L2out
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using {} device".format(device))
 
 class kWTA_autoencoder(nn.Module):
 
@@ -102,11 +104,11 @@ class kWTA_autoencoder(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(numBits*4, numBits*2),
             nn.ReLU(True),
-            nn.Linear(numBits*2, numBits))
+            nn.Linear(numBits*2, numBits)).to(device)
         self.decoder = nn.Sequential(
             nn.Linear(numBits, numBits*2),
             nn.ReLU(True),
-            nn.Linear(numBits*2, numBits*4))
+            nn.Linear(numBits*2, numBits*4)).to(device)
         self.kWTA = Sparsify1D(numOnBits)
         self.criterion = nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.parameters(),
@@ -114,10 +116,11 @@ class kWTA_autoencoder(nn.Module):
                                      weight_decay=1e-5)
 
     def forward(self, x):
-        out = self.encoder(x)
+        xDevice = x.to(device)
+        out = self.encoder(xDevice)
         emb = self.kWTA(out)
-        x = self.decoder(emb)
-        return x, emb
+        recon = self.decoder(emb)
+        return recon, emb
 
     def testBinaryEmbedding(self, x):
         out = self.encoder(x)
@@ -127,9 +130,10 @@ class kWTA_autoencoder(nn.Module):
         return x, binaryEmb
 
     def pool(self, x, writer):
-        recon, emb = self.forward(x)
+        xDevice = x.to(device)
+        recon, emb = self.forward(xDevice)
         binaryEmb = (emb != 0).to(emb)
-        loss = self.criterion(recon, x) + torch.mean((binaryEmb - emb)*(binaryEmb-emb))
+        loss = self.criterion(recon, xDevice) + torch.mean((binaryEmb - emb)*(binaryEmb-emb))
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

@@ -33,9 +33,9 @@ class HPM(object):
         self.name = name
         self.numBits = numBits
         self.numOnBits = numOnBits
-        self.prevActual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
-        self.actual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
-        self.pred = self.getSparseBinary(torch.rand((1, numBits)), numOnBits) # vector holding current input
+        self.prevActual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current inputkjkkjk
+        self.actual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current input
+        self.pred = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current input
 
 
         self.printInterval = 5000
@@ -51,15 +51,18 @@ class HPM(object):
         self.startTime = time.time()
         # self.criterion = nn.MSELoss(reduction='sum')
     def feed(self, context = None, writer=None):
-        output = []
+        output = torch.empty(size=(4, self.numBits))
+        contextDevice = context.to(device)
         for i in range(4):
-            actual =  self.lower.feed(context=self.pred, writer=writer)
+            self.actual =  self.lower.feed(context=self.pred, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
-            self.actual = torch.tensor(actual, dtype=torch.float32).to(device)
+            # self.actual = torch.tensor(actual, dtype=torch.float32).to(device)
             # self.mlp.train()
             # self.net.zero_grad()
             self.opt.zero_grad()
-            input = torch.cat((self.prevActual, context), dim=1).to(device)
+            self.prevActual.to(device)
+            context.to(device)
+            input = torch.cat((self.prevActual, contextDevice), dim=1).to(device)
             self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
             # if self.iteration % self.printInterval == self.printInterval-1:
@@ -75,19 +78,21 @@ class HPM(object):
             self.evaluate(writer)
 
             self.prevActual = self.actual.detach()
-            output.append(self.actual.squeeze().numpy())
+            
+            output[i, :] = self.prevActual.squeeze()
             self.iteration += 1
-        output = np.concatenate(output)
-        pooler_input = torch.tensor(output)
-        pooler_input = torch.reshape(pooler_input, (1,-1))
+        pooler_input = torch.reshape(output, (1,-1))
         pooler_output = self.pooler.pool(pooler_input, writer)
-        return pooler_output.numpy()
+        return pooler_output.reshape((1, -1))
 
 
 
     def evaluate(self,writer):
-        actual = self.actual.detach().numpy()
-        pred = self.pred.detach().numpy()
+        actual = self.actual.cpu()
+        pred = self.pred.cpu()
+
+        actual = actual.detach().numpy()
+        pred = pred.detach().numpy()
         # self.losses[self.iteration%self.printInterval] = \
         #     self.getMSE(actual, pred)
         self.recalls[self.iteration % self.printInterval] = \
