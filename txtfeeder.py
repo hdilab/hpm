@@ -38,10 +38,11 @@ def feedforward()
 from feeder import Feeder
 from SDR import SDR
 import numpy as np
-
+import torch
 
 DEBUG = True # Will print lots of information
-
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using {} device".format(device))
 
 class TXTFeeder(Feeder):
     """
@@ -80,7 +81,7 @@ class TXTFeeder(Feeder):
         inputChar = self.char_list[self.readIndex]
         sparseSDR = self.char_sdr.getNoisySDR(inputChar)
         inputSDR = self.char_sdr.getDenseFromSparse(sparseSDR)
-        return inputSDR.T
+        return torch.tensor(inputSDR.T,dtype=torch.float32).to(device)
 
     def evaluatePrediction(self, inputChar, prediction):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]
