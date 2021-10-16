@@ -4,6 +4,8 @@ import numpy as np
 from models.AE import kWTA_autoencoder
 from models.FC import FCML, FC
 import time
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using {} device".format(device))
 
 class HPM(object):
     def __init__(self,
@@ -20,12 +22,12 @@ class HPM(object):
         #                 outputDim=numBits)
         self.net = FCML(inputDim=numBits * 2,
                         hiddenDim=256,
-                        outputDim=numBits)
+                        outputDim=numBits).to(device)
         # self.pooler = NNSAE( inputDim=numBits*4,
         #                      hiddenDim=numBits,
         #                      name=name+"-AE")
         self.pooler = kWTA_autoencoder(numBits=numBits,
-                                       name=name+"-AE")
+                                       name=name+"-AE").to(device)
         self.lr = 0.0001
         self.lower = lower
         self.name = name
@@ -53,11 +55,11 @@ class HPM(object):
         for i in range(4):
             actual =  self.lower.feed(context=self.pred, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
-            self.actual = torch.tensor(actual, dtype=torch.float32)
+            self.actual = torch.tensor(actual, dtype=torch.float32).to(device)
             # self.mlp.train()
             # self.net.zero_grad()
             self.opt.zero_grad()
-            input = torch.cat((self.prevActual, context), dim=1)
+            input = torch.cat((self.prevActual, context), dim=1).to(device)
             self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
             # if self.iteration % self.printInterval == self.printInterval-1:

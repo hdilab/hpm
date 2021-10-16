@@ -133,9 +133,9 @@ class kWTA_autoencoder(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.evaluate(x, binaryEmb, writer)
+        # self.evaluate(x, binaryEmb, writer)
         # self.update()
-        self.iteration += 1
+        # self.iteration += 1
         return binaryEmb
 
     def evaluate(self, input, emb, writer):
