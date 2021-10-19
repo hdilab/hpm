@@ -48,7 +48,9 @@ class memoAE(nn.Module):
         return recon, emb
 
     def testBinaryEmbedding(self, x):
-        binaryRecon, binaryEmb = self.forward(x)
+        recon, binaryEmb = self.forward(x)
+        reconKWTA = self.kWTARecon(recon)
+        binaryRecon = (reconKWTA != 0).to(recon).to(device)
         return binaryRecon, binaryEmb
 
     def pool(self, x, writer):
@@ -91,6 +93,6 @@ class memoAE(nn.Module):
         commonSum = common.sum()
         targetSum = target.sum()
         recall = commonSum / (targetSum + 0.0001)
-        # if recall > 0.99:
-        #     print("Hello ", self.name)
+        if recall > 0.99:
+            print("Hello ", self.name)
         return recall
