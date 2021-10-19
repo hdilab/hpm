@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #33
+- AE with memoization 
+
 ### Experiment #32
 - HTM with kWTA AE 
 - For AR, use simple FC 
