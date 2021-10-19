@@ -51,12 +51,13 @@ class kWTA_autoencoder(nn.Module):
         return recon, emb
 
     def testBinaryEmbedding(self, x):
-        out = self.encoder(x)
+        xDevice = x.to(device)
+        out = self.encoder(xDevice)
         emb = self.kWTA(out)
         binaryEmb = (emb != 0).to(emb).to(device)
         recon = self.decoder(binaryEmb)
         reconKWTA = self.kWTARecon(recon)
-        binaryRecon = (reconKWTA !=0).to(recon)
+        binaryRecon = (reconKWTA !=0).to(recon).to(device)  
         return binaryRecon, binaryEmb
 
     def pool(self, x, writer):
@@ -68,7 +69,7 @@ class kWTA_autoencoder(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.evaluate(x.detach(), writer)
+        self.evaluate(xDevice.detach(), writer)
         # self.update()
         self.iteration += 1
         return binaryEmb
@@ -76,7 +77,7 @@ class kWTA_autoencoder(nn.Module):
     def evaluate(self, input, writer):
         with torch.no_grad():
             binaryRecon, binaryEmb = self.testBinaryEmbedding(input)
-            self.recall += self.getRecallError(input.numpy(), binaryRecon.numpy())
+            self.recall += self.getRecallError(input, binaryRecon)
 
         if self.iteration % printInterval == 0:
             self.loss /= printInterval
@@ -95,16 +96,10 @@ class kWTA_autoencoder(nn.Module):
             self.startTime = endTime
 
     def getRecallError(self, target, pred):
-        targetSparse = target[0]
-        targetIdx = np.where(targetSparse > 0.1)
-        targetIdx = list(targetIdx[0])
-        # targetSparse = list(targetSparse)
-        numTarget = len(targetIdx)
-        predSparse = pred[0]
-        predSparse = np.argsort(predSparse)[-1 * numTarget:]
-        predSparse = list(predSparse)
-        intersection = [i for i in targetIdx if i in predSparse]
-        recall = len(intersection) / (numTarget + 0.0001)
+        common = target * pred
+        commonSum = common.sum()
+        targetSum = target.sum()
+        recall = commonSum / (targetSum + 0.0001)
         # if recall > 0.99:
         #     print("Hello ", self.name)
         return recall
