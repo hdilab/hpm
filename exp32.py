@@ -78,7 +78,7 @@ args = parser.parse_args()
 n_epochs = args.epoch # start smaller if you are just testing initial behavior
 n_layers = args.layers
 
-writer = SummaryWriter('../runs/exp-32-L' + str(n_layers) + ' ' + localtime, comment='EXP-32 Layer'+str(n_layers))
+writer = SummaryWriter('../runs/exp-32-L' + str(n_layers) + ' ' + args.name + ' ' + localtime, comment='EXP-32 Layer'+str(n_layers))
 os.makedirs('./save', exist_ok=True)
 archiveFilePath = './save/exp-32-L' + str(n_layers) + ' ' + localtime + '.pt'
 
