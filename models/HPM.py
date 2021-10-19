@@ -1,8 +1,8 @@
 from torch import nn
 import torch
 import numpy as np
-from models.AE import kWTA_autoencoder
-from models.FC import FCML, FC
+from models.memoAE import memoAE
+from models.FC import FCML
 import time
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using {} device".format(device))
@@ -26,7 +26,7 @@ class HPM(object):
         # self.pooler = NNSAE( inputDim=numBits*4,
         #                      hiddenDim=numBits,
         #                      name=name+"-AE")
-        self.pooler = kWTA_autoencoder(numBits=numBits,
+        self.pooler = memoAE(numBits=numBits,
                                        name=name+"-AE").to(device)
         self.lr = 0.0001
         self.lower = lower
@@ -49,7 +49,9 @@ class HPM(object):
         self.opt = torch.optim.Adam(self.net.parameters(), lr=self.lr)
         self.criterion = nn.BCELoss()
         self.startTime = time.time()
+        self.programStartTime = time.time()
         # self.criterion = nn.MSELoss(reduction='sum')
+
     def feed(self, context = None, writer=None):
         output = torch.empty(size=(4, self.numBits))
         contextDevice = context.to(device)
@@ -110,6 +112,7 @@ class HPM(object):
             bce = np.mean(self.bceloss)
             currentTestTime = time.time()
             trainTime = int(currentTestTime - self.startTime)
+            totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
 
             print(self.name, \
@@ -117,7 +120,8 @@ class HPM(object):
                   "\t BCELoss: \t", bce, \
                   # "\t MSE: \t",  accuracy, \
                   "\t Recall: \t",  meanRecall,
-                  "\t Training Time: \t", trainTime)
+                  "\t Training Time: \t", trainTime,
+                  "\t Total Time: \t", totalTime)
             writer.add_scalar('loss/BCE'+self.name, bce, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
 
