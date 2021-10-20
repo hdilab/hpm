@@ -89,8 +89,8 @@ class kWTA_autoencoder(nn.Module):
             print(
                 '{} [{}],  Train Loss:{:.6f}, Recall:{:.6f},  Training Time:{} '
                 .format(self.name, self.iteration,  self.loss, self.recall, trainingTime))
-            writer.add_scalar('train/AE-BCE' + self.name, self.loss, self.iteration)
-            writer.add_scalar('test/AE-Recall' + self.name, self.recall, self.iteration)
+            writer.add_scalar('loss/AE-BCE' + self.name, self.loss, self.iteration)
+            writer.add_scalar('recall/AE-Recall' + self.name, self.recall, self.iteration)
             self.loss = 0
             self.recall = 0
             self.startTime = endTime

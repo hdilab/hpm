@@ -20,7 +20,7 @@ class HPM(object):
         # self.net = FCML(inputDim=numBits * 2,
         #                 hiddenDim=256,
         #                 outputDim=numBits)
-        self.net = FCML(inputDim=numBits * 2,
+        self.net = FCML(inputDim=numBits * 3,
                         hiddenDim=256,
                         outputDim=numBits).to(device)
         # self.pooler = NNSAE( inputDim=numBits*4,
@@ -36,6 +36,7 @@ class HPM(object):
         self.prevActual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current inputkjkkjk
         self.actual = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current input
         self.pred = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current input
+        self.context = self.getSparseBinary(torch.rand((1, numBits)), numOnBits).to(device) # vector holding current input
 
 
         self.printInterval = 5000
@@ -52,9 +53,9 @@ class HPM(object):
         self.programStartTime = time.time()
         # self.criterion = nn.MSELoss(reduction='sum')
 
-    def feed(self, context = None, writer=None):
+    def feed(self, feedback = None, writer=None):
         output = torch.empty(size=(4, self.numBits))
-        contextDevice = context.to(device)
+        feedbackDevice = feedback.to(device)
         for i in range(4):
             self.actual =  self.lower.feed(context=self.pred, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
@@ -64,7 +65,7 @@ class HPM(object):
             self.opt.zero_grad()
             # self.prevActual.to(device)
             # context.to(device)
-            input = torch.cat((self.prevActual, contextDevice), dim=1).to(device)
+            input = torch.cat((self.prevActual, self.context, feedbackDevice), dim=1).to(device)
             self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
             # if self.iteration % self.printInterval == self.printInterval-1:
@@ -85,7 +86,8 @@ class HPM(object):
             self.iteration += 1
         pooler_input = torch.reshape(output, (1,-1))
         pooler_output = self.pooler.pool(pooler_input, writer)
-        return pooler_output.reshape((1, -1))
+        self.context = pooler_output.reshape((1, -1))
+        return self.context
 
 
 
