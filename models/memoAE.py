@@ -28,7 +28,7 @@ class memoAE(nn.Module):
         self.encoder = nn.MaxPool1d(4).to(device)
         self.decoder = nn.Sequential(
             nn.Linear(numBits, numBits*2),
-            nn.ReLU(True),
+            nn.LeakyReLU(),
             nn.Linear(numBits*2, numBits*4)).to(device)
         self.kWTARecon = Sparsify1D(numOnBits*4)
         self.criterion = nn.BCEWithLogitsLoss()
