@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #34
+- Separate top-down feedback and in-layer context 
+
 ### Experiment #33
 - AE with memoization 
 
