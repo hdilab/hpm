@@ -43,6 +43,7 @@ Seed = 42
 InputNoise = 0.1
 SaveInterval = 10000
 TestInterval = 50000
+versionName = "EXP-34"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
@@ -78,9 +79,11 @@ args = parser.parse_args()
 n_epochs = args.epoch # start smaller if you are just testing initial behavior
 n_layers = args.layers
 
-writer = SummaryWriter('../runs/exp-33 ' + args.name + ' L' + str(n_layers) + ' ' + localtime, comment='EXP-33 '+ args.name)
+expName = versionName + args.name
+
+writer = SummaryWriter('../runs/' + expName + ' L' + str(n_layers) + ' ' + localtime, comment=expName)
 os.makedirs('./save', exist_ok=True)
-archiveFilePath = './save/exp-33 ' + args.name + ' L' + str(n_layers) + ' ' + localtime + '.pt'
+archiveFilePath = './save/' + expName + ' L' + str(n_layers) + ' ' + localtime + '.pt'
 
 asc_chars = [chr(i) for i in range(128)]
 char_sdr = SDR(asc_chars,

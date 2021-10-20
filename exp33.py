@@ -43,7 +43,7 @@ Seed = 42
 InputNoise = 0.1
 SaveInterval = 10000
 TestInterval = 50000
-versionName = "EXP-34"
+versionName = "EXP-33"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
