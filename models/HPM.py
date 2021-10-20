@@ -53,11 +53,11 @@ class HPM(object):
         self.programStartTime = time.time()
         # self.criterion = nn.MSELoss(reduction='sum')
 
-    def feed(self, feedback = None, writer=None):
+    def feed(self, feedback=None, writer=None):
         output = torch.empty(size=(4, self.numBits))
         feedbackDevice = feedback.to(device)
         for i in range(4):
-            self.actual =  self.lower.feed(feedback =self.pred, writer=writer)
+            self.actual =  self.lower.feed(feedback=self.pred, writer=writer)
             # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
             # self.actual = torch.tensor(self.actual, dtype=torch.float32).to(device)
             # self.mlp.train()

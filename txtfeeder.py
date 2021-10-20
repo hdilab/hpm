@@ -73,7 +73,7 @@ class TXTFeeder(Feeder):
         self.char_sdr = SDR
         self.readIndex = -1
 
-    def feed(self, context=None, writer=None):
+    def feed(self, feedback=None, writer=None):
         if self.readIndex < len(self.char_list)-1:
             self.readIndex = self.readIndex + 1
         else:
