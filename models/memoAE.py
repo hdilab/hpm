@@ -42,8 +42,8 @@ class memoAE(nn.Module):
         self.programStartTime = time.time()
 
     def forward(self, x):
-        xDevice = torch.reshape(x, (1,1,-1)).to(device)
-        out = self.encoder(xDevice)
+        xDevice = torch.reshape(x, (-1,4)).to(device)
+        out = xDevice[:,0]
         emb = torch.reshape(out, (1, -1)).to(device)
         recon = self.decoder(emb)
         return recon, emb
@@ -72,7 +72,7 @@ class memoAE(nn.Module):
             binaryRecon, binaryEmb = self.testBinaryEmbedding(input)
             recall, targetSum = self.getRecallError(input, binaryRecon)
             self.recall += recall
-            self.targetSum += targetSum
+            self.targetSum += binaryEmb.sum()
 
         if self.iteration % printInterval == 0:
             self.loss /= printInterval
@@ -84,7 +84,7 @@ class memoAE(nn.Module):
             totalTime = int((endTime - self.programStartTime)/3600)
 
             print(
-                '{} [{}],  Train Loss:{:.6f}, Recall:{:.6f}, TargetSum:{} Training Time:{} Total Hour:{}'
+                '{} [{}],  Train Loss:{:.6f}, Recall:{:.6f}, TargetSum:{:.2f} Training Time:{} Total Hour:{}'
                 .format(self.name, self.iteration,  self.loss, self.recall, self.targetSum, trainingTime, totalTime))
             writer.add_scalar('loss/AE-BCE' + self.name, self.loss, self.iteration)
             writer.add_scalar('recall/AE-Recall' + self.name, self.recall, self.iteration)
