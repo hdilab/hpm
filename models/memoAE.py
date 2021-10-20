@@ -37,6 +37,7 @@ class memoAE(nn.Module):
                                      weight_decay=1e-5)
         self.loss = 0
         self.recall = 0
+        self.targetSum = 0
         self.startTime = time.time()
         self.programStartTime = time.time()
 
@@ -69,23 +70,28 @@ class memoAE(nn.Module):
     def evaluate(self, input, writer):
         with torch.no_grad():
             binaryRecon, binaryEmb = self.testBinaryEmbedding(input)
-            self.recall += self.getRecallError(input, binaryRecon)
+            recall, targetSum = self.getRecallError(input, binaryRecon)
+            self.recall += recall
+            self.targetSum += targetSum
 
         if self.iteration % printInterval == 0:
             self.loss /= printInterval
             self.recall /= printInterval
+            self.targetSum /= printInterval
 
             endTime = time.time()
             trainingTime = int(endTime - self.startTime)
             totalTime = int((endTime - self.programStartTime)/3600)
 
             print(
-                '{} [{}],  Train Loss:{:.6f}, Recall:{:.6f},  Training Time:{} Total Time:{}'
-                .format(self.name, self.iteration,  self.loss, self.recall, trainingTime, totalTime))
-            writer.add_scalar('train/AE-BCE' + self.name, self.loss, self.iteration)
-            writer.add_scalar('test/AE-Recall' + self.name, self.recall, self.iteration)
+                '{} [{}],  Train Loss:{:.6f}, Recall:{:.6f}, TargetSum:{} Training Time:{} Total Hour:{}'
+                .format(self.name, self.iteration,  self.loss, self.recall, self.targetSum, trainingTime, totalTime))
+            writer.add_scalar('loss/AE-BCE' + self.name, self.loss, self.iteration)
+            writer.add_scalar('recall/AE-Recall' + self.name, self.recall, self.iteration)
+            writer.add_scalar('sparcity/TargetSum' + self.name, self.targetSum, self.iteration)
             self.loss = 0
             self.recall = 0
+            self.targetSum = 0
             self.startTime = endTime
 
     def getRecallError(self, target, pred):
@@ -95,4 +101,4 @@ class memoAE(nn.Module):
         recall = commonSum / (targetSum + 0.0001)
         if recall > 0.99:
             print("Hello ", self.name)
-        return recall
+        return recall, targetSum
