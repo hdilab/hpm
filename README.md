@@ -8,8 +8,11 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #36
+- Memoization based approach 
+
 ### Experiment #35
-- Chage Pooling to Sampling
+- Change Pooling to Sampling
 - Change RELU to LeakyRELU
 
 ### Experiment #34
