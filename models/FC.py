@@ -41,10 +41,11 @@ class FCML(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(inputDim, hiddenDim)
         self.fc2 = nn.Linear(hiddenDim, outputDim)
+        self.activation = nn.LeakyReLU()
 
     def forward(self, x):
         a = self.fc1(x)
-        h = torch.sigmoid(a)
+        h = self.activation(a)
         out = self.fc2(h)
         sigout = torch.sigmoid(out)
         return sigout
