@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #35
+- Chage Pooling to Sampling
+- Change RELU to LeakyRELU
+
 ### Experiment #34
 - Separate top-down feedback and in-layer context 
 
