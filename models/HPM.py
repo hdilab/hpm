@@ -15,17 +15,9 @@ class HPM(object):
                  name="layer"):
 
         super().__init__()
-        # self.mlp = FC(inputDim=512,
-        #               outputDim=512)
-        # self.net = FCML(inputDim=numBits * 2,
-        #                 hiddenDim=256,
-        #                 outputDim=numBits)
         self.net = FCML(inputDim=numBits * 3,
                         hiddenDim=256,
                         outputDim=numBits).to(device)
-        # self.pooler = NNSAE( inputDim=numBits*4,
-        #                      hiddenDim=numBits,
-        #                      name=name+"-AE")
         self.pooler = memoAE(numBits=numBits,
                                        name=name+"-AE").to(device)
         self.lr = 0.0001
@@ -58,22 +50,12 @@ class HPM(object):
         feedbackDevice = feedback.to(device)
         for i in range(4):
             self.actual =  self.lower.feed(feedback=self.pred, writer=writer)
-            # self.actual = unsqueeze(torch.tensor(actual.T, dtype=torch.float32), 0)
-            # self.actual = torch.tensor(self.actual, dtype=torch.float32).to(device)
-            # self.mlp.train()
-            # self.net.zero_grad()
             self.opt.zero_grad()
-            # self.prevActual.to(device)
-            # context.to(device)
             input = torch.cat((self.prevActual, self.context, feedbackDevice), dim=1).to(device)
             self.pred = self.net(input)
             loss = self.criterion(self.pred, self.actual)
-            # if self.iteration % self.printInterval == self.printInterval-1:
-            #     print(self.iteration, loss.item())
             self.bceloss[self.iteration % self.printInterval] = loss.item()
-
             loss.backward()
-            # nn.utils.clip_grad_norm_(self.net.parameters(), 5)
             self.opt.step()
 
             self.pred = self.pred.detach()
@@ -89,23 +71,15 @@ class HPM(object):
         self.context = pooler_output.reshape((1, -1))
         return self.context
 
-
-
     def evaluate(self,writer):
         actual = self.actual.cpu()
         pred = self.pred.cpu()
 
         actual = actual.detach().numpy()
         pred = pred.detach().numpy()
-        # self.losses[self.iteration%self.printInterval] = \
-        #     self.getMSE(actual, pred)
+
         self.recalls[self.iteration % self.printInterval] = \
             self.getRecallError(actual, pred)
-        # reconstructPred = self.getReconstruction()
-        # self.reconstructionErrors[self.iteration % self.printInterval] = \
-        #     self.getMSE(self.prevActual, reconstructPred)
-        # self.reconstructionRecalls[self.iteration % self.printInterval] = \
-        #     self.getRecallError(self.prevActual, reconstructPred)
 
 
         if self.iteration % self.printInterval  == 0:
@@ -148,13 +122,6 @@ class HPM(object):
         targetIdx = np.where(targetSparse > 0.1)
         sorted = np.sort(targetIdx)
         return sorted
-
-    def getReconstruction(self):
-        ind = np.argsort(self.h, axis=0)[-10:]
-        reconstructH = np.zeros(self.h.shape)
-        reconstructH[ind] = 1.0
-        reconstructPred = self.W * reconstructH
-        return reconstructPred
 
     def getMSE(self, target, pred):
         error = target - pred

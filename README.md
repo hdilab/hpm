@@ -8,6 +8,13 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #36
+- Increase the number of Bits to 2048
+- 
+### Experiment #35
+- Use LeakyRELU instead of RELU
+
+
 ### Experiment #34
 - Separate top-down feedback and in-layer context 
 
