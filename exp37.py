@@ -70,7 +70,7 @@ parser.add_argument("-s", "--sequence",
 parser.add_argument("-l", "--layers",
                     type=int,
                     help="Number of layers",
-                    default="3")
+                    default="1")
 parser.add_argument("-f", "--file",
                     help="path to the saved model",
                     default="NA")
