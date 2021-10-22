@@ -59,3 +59,11 @@ class Dendrite(object):
         contextPermanences = [s.permanence for s in self.contextSynapses]
         sumPermanences = sum(inputPermanences) + sum(contextPermanences)
         return sumPermanences
+
+    def hasNegativePermanence(self):
+        minInputPermanences = min([s.permanence for s in self.inputSynapses])
+        minContextPermanences = min([s.permanence for s in self.contextSynapses])
+        if minInputPermanences < 0 or minContextPermanences < 0:
+            return True
+        else:
+            return False

@@ -36,6 +36,7 @@ class Cell(object):
     def updatePredOnActualOff(self, input, context):
         for d in self.activeDendrites:
             d.weaken(input, context)
+        self.pruneDendrites()
         return True
 
     def updatePredOffActualOff(self, input, context):
@@ -51,13 +52,20 @@ class Cell(object):
 
     def addDendrite(self, input, context):
         if len(self.dendrites) > MAX_NUM_DENDRITES:
-            self.pruneDendrite()
+            self.removeWeakestDendrite()
         self.dendrites.append(Dendrite(inp=input, context=context))
 
-    def pruneDendrite(self):
+    def removeWeakestDendrite(self):
         values = [d.sumPermanence() for d in self.dendrites]
         index_min = min(range(len(values)), key=values.__getitem__)
         self.dendrites.pop(index_min)
+
+    def pruneDendrites(self):
+        for i  in reversed(range(len(self.dendrites))):
+            if self.dendrites[i].hasNegativePermanence():
+                self.dendrites.pop(i)
+
+
 
 
 
