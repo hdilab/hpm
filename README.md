@@ -8,8 +8,11 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #37
+- Memoization-based approach
+
 ### Experiment #36
-- Memoization based approach 
+- Increase NumBit from 512 to 2048
 
 ### Experiment #35
 - Change Pooling to Sampling
