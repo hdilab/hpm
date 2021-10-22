@@ -40,9 +40,9 @@ from SDR import SDR
 import numpy as np
 import torch
 
-DEBUG = True # Will print lots of information
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print("Using {} device".format(device))
+# DEBUG = True # Will print lots of information
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+# print("Using {} device".format(device))
 
 class TXTFeeder(Feeder):
     """
