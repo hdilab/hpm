@@ -59,7 +59,7 @@ class memoHPM(object):
         for i, buf in enumerate(buffer):
             for cell in buf:
                 combine.append(cell + i*self.numBits)
-        output = {c for c in combine if c % 4 == 0}
+        output = {int(c/4) for c in combine if c % 4 == 0}
         return output
 
     def update(self, input, context, writer=None):
