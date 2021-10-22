@@ -1,7 +1,6 @@
 PRINT_INTERVAL = 50
 
 import numpy as np
-from models.memoAE import memoAE
 from models.Cell import Cell
 import time
 import random
