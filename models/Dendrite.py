@@ -57,5 +57,5 @@ class Dendrite(object):
     def sumPermanence(self):
         inputPermanences = [s.permanence for s in self.inputSynapses]
         contextPermanences = [s.permanence for s in self.contextSynapses]
-        sumPermanences = inputPermanences + contextPermanences
+        sumPermanences = sum(inputPermanences) + sum(contextPermanences)
         return sumPermanences
