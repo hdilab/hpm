@@ -83,6 +83,15 @@ class TXTFeeder(Feeder):
         inputSDR = self.char_sdr.getDenseFromSparse(sparseSDR)
         return torch.tensor(inputSDR.T,dtype=torch.float32).to(device)
 
+    def feedSparse(self, feedback=None, writer=None):
+        if self.readIndex < len(self.char_list) - 1:
+            self.readIndex = self.readIndex + 1
+        else:
+            self.readIndex = -1
+        inputChar = self.char_list[self.readIndex]
+        sparseSDR = set(self.char_sdr.getNoisySDR(inputChar))
+        return sparseSDR
+
     def evaluatePrediction(self, inputChar, prediction):
         scores = [(i, self.getMatch(i, prediction)) for i in range(128)]
         # scores = [s for s in scores if s[1] > 4]
