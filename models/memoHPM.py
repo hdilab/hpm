@@ -5,7 +5,7 @@ from models.Cell import Cell
 import time
 import random
 random.seed(42)
-
+from joblib import Parallel, delayed
 
 
 class memoHPM(object):
@@ -40,7 +40,7 @@ class memoHPM(object):
         buffer = []
         for i in range(4):
             self.actual = self.lower.feedSparse(feedback=self.pred, writer=writer)
-            self.pred = self.predict(self.prevActual, self.context)
+            self.pred = self.predictMP(self.prevActual, self.context)
             self.evaluate(self.pred, self.actual, writer)
             self.update(self.prevActual, self.context, writer=writer)
             buffer.append(self.actual)
@@ -53,6 +53,17 @@ class memoHPM(object):
     def predict(self, input, context):
         pred = {i for i in range(len(self.cells)) if self.cells[i].predict(input, context)}
         return pred
+
+    def predictMP(self, input, context):
+        pred = Parallel(n_jobs=10)(delayed(self.predictCell)(c) for c in self.cells)
+        # Parallel(n_jobs=2)(delayed(sqrt)(i ** 2) for i in range(10)
+
+        output = {i for i, p in enumerate(pred) if p}
+
+        return output
+
+    def predictCell(self, cell):
+        return cell.predict(self.prevActual, self.context)
 
     def pool(self, buffer, writer):
         combine = []
