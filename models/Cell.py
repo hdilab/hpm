@@ -1,6 +1,7 @@
 MAX_NUM_DENDRITES = 128
 
 from models.Dendrite import Dendrite
+import random
 
 class Cell(object):
     def __init__(self,
@@ -14,6 +15,7 @@ class Cell(object):
         self.activeDendrites = []
         self.countAddDendrite = 0
         self.countPruneDendrite = 0
+        self.numOnBits = numOnBits
 
     def predict(self, input, context):
         self.activeDendrites = []
@@ -84,7 +86,11 @@ class Cell(object):
     def addDendrite(self, input, context):
         if len(self.dendrites) > MAX_NUM_DENDRITES:
             self.removeWeakestDendrite()
-        self.dendrites.append(Dendrite(inp=input, context=context))
+        numInputSynapse = random.randint(int(len(input)/2), len(input))
+        numContextSynapse = random.randint(int(len(context)/2), len(context))
+        inputSynapses = random.sample(input, numInputSynapse)
+        contextSynapses = random.sample(context, numContextSynapse)
+        self.dendrites.append(Dendrite(inp=inputSynapses, context=contextSynapses))
         self.countAddDendrite += 1
 
     def removeWeakestDendrite(self):
