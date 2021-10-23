@@ -1,4 +1,4 @@
-PRINT_INTERVAL = 1000
+PRINT_INTERVAL = 100
 
 import numpy as np
 from models.Cell import Cell
@@ -103,11 +103,14 @@ class memoHPM(object):
             predictionCountDendrites = [c.getPredictionCountDendrites() for c  in self.cells]
             successCountDendrites = [c.getSuccessCountDendrites() for c in self.cells]
             failureCountDendrites = [c.getFailureCountDendrites() for c in self.cells]
+            countAddDendrites = np.mean([c.countAddDendrite for c in self.cells])
+            countPruneDendrites = np.mean([c.countPruneDendrite for c in self.cells])
             meanPredictionCountDendrites = np.mean(predictionCountDendrites)
             meanSuccessCountDendrites = np.mean(successCountDendrites)
             meanFailureCountDendrites = np.mean(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
-            stdNumDendrites = np.mean(numDendrites)
+            stdNumDendrites = np.std(numDendrites)
+
 
             print(self.name, \
                   " Iteration: ", self.iteration,
@@ -118,6 +121,8 @@ class memoHPM(object):
                   " muPred: ", "{:.1f}".format(meanPredictionCountDendrites),
                   " muSucc: ", "{:.1f}".format(meanSuccessCountDendrites),
                   " muFail: ", "{:.1f}".format(meanFailureCountDendrites),
+                  " addDend: ", "{:.1f}".format(countAddDendrites),
+                  " pruneDend: ", "{:.1f}".format(countPruneDendrites),
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
@@ -127,6 +132,8 @@ class memoHPM(object):
             writer.add_scalar('counts/muPred'+self.name, meanPredictionCountDendrites, self.iteration)
             writer.add_scalar('counts/muSucc'+self.name, meanSuccessCountDendrites, self.iteration)
             writer.add_scalar('counts/muFail'+self.name, meanFailureCountDendrites, self.iteration)
+            writer.add_scalar('counts/addDend'+self.name, countAddDendrites, self.iteration)
+            writer.add_scalar('counts/pruneDend'+self.name, countPruneDendrites, self.iteration)
 
 
     @staticmethod

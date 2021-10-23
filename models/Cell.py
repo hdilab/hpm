@@ -12,6 +12,8 @@ class Cell(object):
         self.dendrites = []
         self.index = index
         self.activeDendrites = []
+        self.countAddDendrite = 0
+        self.countPruneDendrite = 0
 
     def predict(self, input, context):
         self.activeDendrites = []
@@ -83,16 +85,19 @@ class Cell(object):
         if len(self.dendrites) > MAX_NUM_DENDRITES:
             self.removeWeakestDendrite()
         self.dendrites.append(Dendrite(inp=input, context=context))
+        self.countAddDendrite += 1
 
     def removeWeakestDendrite(self):
         values = [d.sumPermanence() for d in self.dendrites]
         index_min = min(range(len(values)), key=values.__getitem__)
         self.dendrites.pop(index_min)
+        self.countPruneDendrite += 1
 
     def pruneDendrites(self):
         for i  in reversed(range(len(self.dendrites))):
             if self.dendrites[i].hasNegativePermanence():
                 self.dendrites.pop(i)
+                self.countPruneDendrite += 1
 
 
 
