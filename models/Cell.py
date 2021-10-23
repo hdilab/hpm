@@ -37,7 +37,7 @@ class Cell(object):
             self.addDendrite(input, context)
 
     def updatePredOnActualOff(self, input, context):
-        candidates = self.findActiveDendrites(input, context)
+        candidates = self.activeDendrites
         for d in candidates:
             d.weaken(input, context)
             d.failureCount += 1
