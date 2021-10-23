@@ -37,10 +37,11 @@ class memoHPM(object):
         self.startTime = time.time()
         self.programStartTime = time.time()
 
-    def feedSparse(self, feedback=None, writer=None):
+    def feedSparse(self, feedback={}, writer=None):
         buffer = []
         for i in range(4):
             self.actual = self.lower.feedSparse(feedback=self.pred, writer=writer)
+            self.context = self.context | feedback
             self.pred = self.predict(self.prevActual, self.context)
             self.evaluate(self.pred, self.actual, writer)
             self.update(self.prevActual, self.context, writer=writer)

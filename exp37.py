@@ -126,7 +126,7 @@ if args.file == "NA":
         layers.append(newLayer)
         lowerLayer = newLayer
 
-    randomSDR = torch.rand((1, NumBits))
+    randomSDR = char_sdr.getRandomSDR()
 else:
     archive = torch.load(args.file)
     layers = archive['layers']

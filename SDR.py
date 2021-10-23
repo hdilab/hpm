@@ -112,8 +112,8 @@ class SDR(object):
         return numerator*1.0/denominator
 
     def getRandomSDR(self):
-        noise = random.sample(self.population, numOnBits)
-        return noise
+        noise = random.sample(self.population, self.numOnBits)
+        return set(noise)
 
 
 def combinatorial(a,b):
