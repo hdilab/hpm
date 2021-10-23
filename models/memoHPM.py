@@ -99,12 +99,14 @@ class memoHPM(object):
             trainTime = int(currentTestTime - self.startTime)
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
-            numDendrites = [c.countDendrites() for c in self.cells]
-            predictionCountDendrites = [c.getPredictionCountDendrites() for c  in self.cells]
-            successCountDendrites = [c.getSuccessCountDendrites() for c in self.cells]
-            failureCountDendrites = [c.getFailureCountDendrites() for c in self.cells]
-            countAddDendrites = np.mean([c.countAddDendrite for c in self.cells])
-            countPruneDendrites = np.mean([c.countPruneDendrite for c in self.cells])
+            numDendrites = np.array([c.countDendrites() for c in self.cells])
+            predictionCountDendrites = np.array([c.getPredictionCountDendrites() for c  in self.cells])
+            successCountDendrites = np.array([c.getSuccessCountDendrites() for c in self.cells])
+            failureCountDendrites = np.array([c.getFailureCountDendrites() for c in self.cells])
+            addDendrites = np.array([c.countAddDendrite for c in self.cells])
+            countAddDendrites = np.mean(addDendrites)
+            pruneDendrites = np.array([c.countPruneDendrite for c in self.cells])
+            countPruneDendrites = np.mean(pruneDendrites)
             meanPredictionCountDendrites = np.mean(predictionCountDendrites)
             meanSuccessCountDendrites = np.mean(successCountDendrites)
             meanFailureCountDendrites = np.mean(failureCountDendrites)
@@ -136,6 +138,11 @@ class memoHPM(object):
             writer.add_scalar('counts/muFail'+self.name, meanFailureCountDendrites, self.iteration)
             writer.add_scalar('counts/addDend'+self.name, countAddDendrites, self.iteration)
             writer.add_scalar('counts/pruneDend'+self.name, countPruneDendrites, self.iteration)
+            writer.add_histogram('hist/numDend' + self.name, numDendrites, self.iteration)
+            writer.add_histogram('hist/numSucc' + self.name, successCountDendrites, self.iteration)
+            writer.add_histogram('hist/numFail' + self.name, failureCountDendrites, self.iteration)
+            writer.add_histogram('hist/numAdd' + self.name, addDendrites , self.iteration)
+            writer.add_histogram('hist/numPrune' + self.name, pruneDendrites , self.iteration)
 
 
     @staticmethod
