@@ -14,14 +14,18 @@ class Cell(object):
         self.activeDendrites = []
 
     def predict(self, input, context):
+        self.activeDendrites = []
         for aDend in self.dendrites:
             if aDend.predict(input, context):
+                self.activeDendrites.append(aDend)
                 return True
         return False
 
     def updatePredOnActualOn(self, input, context):
-        candidates = self.findActiveDendrites(input, context)
+        candidates = self.activeDendrites
         self.updateOldDendrites(candidates, input, context)
+        for d in candidates:
+            d.successCount += 1
 
     def updatePredOffActualOn(self, input, context):
         candidates = self.findCandidateDendrites(input, context)
@@ -34,6 +38,7 @@ class Cell(object):
         candidates = self.findActiveDendrites(input, context)
         for d in candidates:
             d.weaken(input, context)
+            d.failureCount += 1
         self.pruneDendrites()
 
     def findActiveDendrites(self, input, context):
@@ -46,9 +51,25 @@ class Cell(object):
     def countDendrites(self):
         return len(self.dendrites)
 
+    def getPredictionCountDendrites(self):
+        total = sum([d.predictionCount for d in self.dendrites])
+        mean = total / (len(self.dendrites)+0.001)
+        return mean
+
+    def getSuccessCountDendrites(self):
+        total = sum([d.successCount for d in self.dendrites])
+        mean = total / (len(self.dendrites)+0.001)
+        return mean
+
+    def getFailureCountDendrites(self):
+        total = sum([d.failureCount for d in self.dendrites])
+        mean = total / (len(self.dendrites)+0.001)
+        return mean
+
     def updatePredOffActualOff(self, input, context):
-        for d in self.dendrites:
-            d.decay()
+        # for d in self.dendrites:
+        #     d.decay()
+        return True
 
     def findCandidateDendrites(self, input, context):
         candidates = {aDend for aDend in self.dendrites if aDend.isCandidate(input,context)}

@@ -15,8 +15,12 @@ class Dendrite(object):
 
         self.inputSynapses = self.populateSynapses(inp)
         self.contextSynapses = self.populateSynapses(context)
+        self.predictionCount = 0
+        self.successCount = 0
+        self.failureCount = 0
 
     def predict(self, inp, context):
+        self.predictionCount += 1
         matchInput = [1 for s in self.inputSynapses if s.isActive and s.target in inp]
         if sum(matchInput) < ACTIVATE_THRESHOLD:
             return False

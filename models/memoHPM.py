@@ -100,21 +100,33 @@ class memoHPM(object):
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
             numDendrites = [c.countDendrites() for c in self.cells]
+            predictionCountDendrites = [c.getPredictionCountDendrites() for c  in self.cells]
+            successCountDendrites = [c.getSuccessCountDendrites() for c in self.cells]
+            failureCountDendrites = [c.getFailureCountDendrites() for c in self.cells]
+            meanPredictionCountDendrites = np.mean(predictionCountDendrites)
+            meanSuccessCountDendrites = np.mean(successCountDendrites)
+            meanFailureCountDendrites = np.mean(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
             stdNumDendrites = np.mean(numDendrites)
 
             print(self.name, \
-                  "\t Iteration: \t", self.iteration,
-                  "\t Recall: \t",  "{:.4f}".format(meanRecall),
-                  "\t muDendrites: \t", "{:.4f}".format(meanNumDendrites),
-                  "\t stdDendrites: \t", "{:.4f}".format(stdNumDendrites),
-                  "\t muAct: \t", "{:.4f}".format(meanActivations),
-                  "\t Training Time: \t", trainTime,
-                  "\t Total Time: \t", totalTime)
+                  " Iteration: ", self.iteration,
+                  " Recall: ",  "{:.4f}".format(meanRecall),
+                  " muDendrites: ", "{:.1f}".format(meanNumDendrites),
+                  " stdDendrites: ", "{:.1f}".format(stdNumDendrites),
+                  " muAct: ", "{:.1f}".format(meanActivations),
+                  " muPred: ", "{:.1f}".format(meanPredictionCountDendrites),
+                  " muSucc: ", "{:.1f}".format(meanSuccessCountDendrites),
+                  " muFail: ", "{:.1f}".format(meanFailureCountDendrites),
+                  " Training Time: ", trainTime,
+                  " Total Time: ", totalTime)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
             writer.add_scalar('counts/meanDendrites'+self.name, meanNumDendrites, self.iteration)
             writer.add_scalar('counts/stdDendrites'+self.name, stdNumDendrites , self.iteration)
             writer.add_scalar('counts/meanActivations'+self.name, meanActivations, self.iteration)
+            writer.add_scalar('counts/muPred'+self.name, meanPredictionCountDendrites, self.iteration)
+            writer.add_scalar('counts/muSucc'+self.name, meanSuccessCountDendrites, self.iteration)
+            writer.add_scalar('counts/muFail'+self.name, meanFailureCountDendrites, self.iteration)
 
 
     @staticmethod
