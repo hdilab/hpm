@@ -99,6 +99,12 @@ class Cell(object):
                 self.dendrites.pop(i)
                 self.countPruneDendrite += 1
 
+    def resetCount(self):
+        self.countPruneDendrite = 0
+        self.countAddDendrite = 0
+        for d in self.dendrites:
+            d.resetCount()
+
 
 
 

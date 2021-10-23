@@ -79,3 +79,8 @@ class Dendrite(object):
             return True
         else:
             return False
+
+    def resetCount(self):
+        self.predictionCount = 0
+        self.successCount = 0
+        self.failureCount = 0

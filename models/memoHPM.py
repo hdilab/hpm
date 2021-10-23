@@ -1,4 +1,4 @@
-PRINT_INTERVAL = 100
+PRINT_INTERVAL = 1000
 
 import numpy as np
 from models.Cell import Cell
@@ -110,6 +110,8 @@ class memoHPM(object):
             meanFailureCountDendrites = np.mean(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
             stdNumDendrites = np.std(numDendrites)
+            for c in self.cells:
+                c.resetCount()
 
 
             print(self.name, \
@@ -119,8 +121,8 @@ class memoHPM(object):
                   " stdDendrites: ", "{:.1f}".format(stdNumDendrites),
                   " muAct: ", "{:.1f}".format(meanActivations),
                   " muPred: ", "{:.1f}".format(meanPredictionCountDendrites),
-                  " muSucc: ", "{:.1f}".format(meanSuccessCountDendrites),
-                  " muFail: ", "{:.1f}".format(meanFailureCountDendrites),
+                  " muSucc: ", "{:.3f}".format(meanSuccessCountDendrites),
+                  " muFail: ", "{:.3f}".format(meanFailureCountDendrites),
                   " addDend: ", "{:.1f}".format(countAddDendrites),
                   " pruneDend: ", "{:.1f}".format(countPruneDendrites),
                   " Training Time: ", trainTime,
