@@ -51,6 +51,11 @@ class Dendrite(object):
             if s.target in context:
                 s.weaken()
 
+    def decay(self):
+        for s in self.inputSynapses:
+            s.decay()
+        for s in self.contextSynapses:
+            s.decay()
 
     @staticmethod
     def populateSynapses(indexes):

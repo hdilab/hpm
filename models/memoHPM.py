@@ -1,11 +1,10 @@
-PRINT_INTERVAL = 100
+PRINT_INTERVAL = 1000
 
 import numpy as np
 from models.Cell import Cell
 import time
 import random
 random.seed(42)
-from joblib import Parallel, delayed
 
 
 class memoHPM(object):
@@ -31,6 +30,8 @@ class memoHPM(object):
         self.context = set(random.sample(self.population, numOnBits))
 
         self.recalls = [0 for i in range(PRINT_INTERVAL)]
+        self.activations = [0 for i in range(PRINT_INTERVAL)]
+
         self.iteration = 0
 
         self.startTime = time.time()
@@ -54,16 +55,16 @@ class memoHPM(object):
         pred = {i for i in range(len(self.cells)) if self.cells[i].predict(input, context)}
         return pred
 
-    def predictMP(self, input, context):
-        pred = Parallel(n_jobs=10)(delayed(self.predictCell)(c) for c in self.cells)
-        # Parallel(n_jobs=2)(delayed(sqrt)(i ** 2) for i in range(10)
-
-        output = {i for i, p in enumerate(pred) if p}
-
-        return output
-
-    def predictCell(self, cell):
-        return cell.predict(self.prevActual, self.context)
+    # def predictMP(self, input, context):
+    #     pred = Parallel(n_jobs=10)(delayed(self.predictCell)(c) for c in self.cells)
+    #     # Parallel(n_jobs=2)(delayed(sqrt)(i ** 2) for i in range(10)
+    #
+    #     output = {i for i, p in enumerate(pred) if p}
+    #
+    #     return output
+    #
+    # def predictCell(self, cell):
+    #     return cell.predict(self.prevActual, self.context)
 
     def pool(self, buffer, writer):
         combine = []
@@ -88,20 +89,32 @@ class memoHPM(object):
 
         self.recalls[self.iteration % PRINT_INTERVAL] = \
             self.getRecallError(target, pred)
+        self.activations[self.iteration % PRINT_INTERVAL] = len(pred)
 
         if self.iteration % PRINT_INTERVAL == 0:
             meanRecall = np.mean(self.recalls)
+            meanActivations = np.mean(self.activations)
             currentTestTime = time.time()
             trainTime = int(currentTestTime - self.startTime)
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
+            numDendrites = [c.countDendrites() for c in self.cells]
+            meanNumDendrites = np.mean(numDendrites)
+            stdNumDendrites = np.mean(numDendrites)
 
             print(self.name, \
                   "\t Iteration: \t", self.iteration,
                   "\t Recall: \t",  "{:.4f}".format(meanRecall),
+                  "\t muDendrites: \t", "{:.4f}".format(meanNumDendrites),
+                  "\t stdDendrites: \t", "{:.4f}".format(stdNumDendrites),
+                  "\t muAct: \t", "{:.4f}".format(meanActivations),
                   "\t Training Time: \t", trainTime,
                   "\t Total Time: \t", totalTime)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
+            writer.add_scalar('counts/meanDendrites'+self.name, meanNumDendrites, self.iteration)
+            writer.add_scalar('counts/stdDendrites'+self.name, stdNumDendrites , self.iteration)
+            writer.add_scalar('counts/meanActivations'+self.name, meanActivations, self.iteration)
+
 
     @staticmethod
     def getRecallError(target, pred):

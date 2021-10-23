@@ -1,6 +1,7 @@
 CONNECTION_THRESHOLD = 0.5
 POSITIVE_REINFORCE = 0.1
 NEGATIVE_REINFORCE = 0.1
+DECAY = 0.01
 
 
 class Synapse(object):
@@ -32,3 +33,7 @@ class Synapse(object):
             self.isActive = True
         else:
             self.isActive = False
+
+    def decay(self):
+        self.permanence -= DECAY
+        self.updateConnection()

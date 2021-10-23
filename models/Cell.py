@@ -22,7 +22,6 @@ class Cell(object):
     def updatePredOnActualOn(self, input, context):
         candidates = self.findActiveDendrites(input, context)
         self.updateOldDendrites(candidates, input, context)
-        return True
 
     def updatePredOffActualOn(self, input, context):
         candidates = self.findCandidateDendrites(input, context)
@@ -36,7 +35,6 @@ class Cell(object):
         for d in candidates:
             d.weaken(input, context)
         self.pruneDendrites()
-        return True
 
     def findActiveDendrites(self, input, context):
         activeDendrites = []
@@ -45,9 +43,12 @@ class Cell(object):
                 activeDendrites.append(d)
         return activeDendrites
 
+    def countDendrites(self):
+        return len(self.dendrites)
 
     def updatePredOffActualOff(self, input, context):
-        return True
+        for d in self.dendrites:
+            d.decay()
 
     def findCandidateDendrites(self, input, context):
         candidates = {aDend for aDend in self.dendrites if aDend.isCandidate(input,context)}
