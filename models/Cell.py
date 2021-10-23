@@ -14,16 +14,14 @@ class Cell(object):
         self.activeDendrites = []
 
     def predict(self, input, context):
-        self.activeDendrites = []
-        activate = False
         for aDend in self.dendrites:
             if aDend.predict(input, context):
-                activate = True
-                self.activeDendrites.append(aDend)
-        return activate
+                return True
+        return False
 
     def updatePredOnActualOn(self, input, context):
-        self.updateOldDendrites(self.activeDendrites, input, context)
+        candidates = self.findActiveDendrites(input, context)
+        self.updateOldDendrites(candidates, input, context)
         return True
 
     def updatePredOffActualOn(self, input, context):
@@ -34,10 +32,19 @@ class Cell(object):
             self.addDendrite(input, context)
 
     def updatePredOnActualOff(self, input, context):
-        for d in self.activeDendrites:
+        candidates = self.findActiveDendrites(input, context)
+        for d in candidates:
             d.weaken(input, context)
         self.pruneDendrites()
         return True
+
+    def findActiveDendrites(self, input, context):
+        activeDendrites = []
+        for d in self.dendrites:
+            if d.predict(input, context):
+                activeDendrites.append(d)
+        return activeDendrites
+
 
     def updatePredOffActualOff(self, input, context):
         return True

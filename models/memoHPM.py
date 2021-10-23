@@ -1,4 +1,4 @@
-PRINT_INTERVAL = 1000
+PRINT_INTERVAL = 100
 
 import numpy as np
 from models.Cell import Cell

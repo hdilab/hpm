@@ -17,12 +17,15 @@ class Dendrite(object):
         self.contextSynapses = self.populateSynapses(context)
 
     def predict(self, inp, context):
-        matchInput = [1 for s in self.inputSynapses if s.isActive() and s.target in inp]
-        matchContext = [1 for s in self.contextSynapses if s.isActive() and s.target in context]
-        if sum(matchInput) > ACTIVATE_THRESHOLD and sum(matchContext) > ACTIVATE_THRESHOLD:
-            return True
-        else:
+        matchInput = [1 for s in self.inputSynapses if s.isActive and s.target in inp]
+        if sum(matchInput) < ACTIVATE_THRESHOLD:
             return False
+
+        matchContext = [1 for s in self.contextSynapses if s.isActive and s.target in context]
+        if sum(matchContext) < ACTIVATE_THRESHOLD:
+            return False
+        else:
+            return True
 
     def isCandidate(self, inp, context):
         matchInput = {s for s in self.inputSynapses if s.target in inp}

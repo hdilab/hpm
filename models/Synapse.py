@@ -13,15 +13,22 @@ class Synapse(object):
 
         self.target = target
         self.permanence = permanence
-
-    def isActive(self):
         if self.permanence > CONNECTION_THRESHOLD:
-            return True
+            self.isActive = True
         else:
-            return False
+            self.isActive = False
+
 
     def strengthen(self):
         self.permanence += POSITIVE_REINFORCE
+        self.updateConnection()
 
     def weaken(self):
         self.permanence -= NEGATIVE_REINFORCE
+        self.updateConnection()
+
+    def updateConnection(self):
+        if self.permanence > CONNECTION_THRESHOLD:
+            self.isActive = True
+        else:
+            self.isActive = False
