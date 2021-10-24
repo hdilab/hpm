@@ -15,6 +15,8 @@ class Dendrite(object):
 
         self.inputSynapses = self.populateSynapses(inp)
         self.contextSynapses = self.populateSynapses(context)
+        self.inputConnections = inp
+        self.contextConnections = context
         self.predictionCount = 0
         self.successCount = 0
         self.failureCount = 0
@@ -32,8 +34,9 @@ class Dendrite(object):
             return True
 
     def isCandidate(self, inp, context):
-        matchInput = {s for s in self.inputSynapses if s.target in inp}
-        matchContext = {s for s in self.contextSynapses if s.target in context}
+
+        matchInput = inp & self.inputConnections
+        matchContext = context & self.contextConnections
         if len(matchInput) > ACTIVATE_THRESHOLD and len(matchContext) > ACTIVATE_THRESHOLD:
             return True
         else:
@@ -55,7 +58,7 @@ class Dendrite(object):
             if s.target in context:
                 s.weaken()
 
-    def decay(self):
+    def decay(self, inp, context):
         for s in self.inputSynapses:
             s.decay()
         for s in self.contextSynapses:
@@ -63,7 +66,7 @@ class Dendrite(object):
 
     @staticmethod
     def populateSynapses(indexes):
-        synapses = [Synapse(permanence=random.uniform(0.5,1.0), target=i) for i in indexes]
+        synapses = [Synapse(permanence=random.uniform(0.4,0.5), target=i) for i in indexes]
         return synapses
 
     def sumPermanence(self):

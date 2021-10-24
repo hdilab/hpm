@@ -13,17 +13,25 @@ class Cell(object):
         self.dendrites = []
         self.index = index
         self.activeDendrites = []
+        self.candidates = []
         self.countAddDendrite = 0
         self.countPruneDendrite = 0
         self.numOnBits = numOnBits
 
     def predict(self, input, context):
         self.activeDendrites = []
+        self.candidates = []
         for aDend in self.dendrites:
-            if aDend.predict(input, context):
-                self.activeDendrites.append(aDend)
-                return True
-        return False
+            if aDend.isCandidate(input, context):
+                if aDend.predict(input, context):
+                    self.activeDendrites.append(aDend)
+                else:
+                    self.candidates.append(aDend)
+
+        if len(self.activeDendrites) > 0:
+            return True
+        else:
+            return False
 
     def updatePredOnActualOn(self, input, context):
         candidates = self.activeDendrites
@@ -32,7 +40,7 @@ class Cell(object):
             d.successCount += 1
 
     def updatePredOffActualOn(self, input, context):
-        candidates = self.findCandidateDendrites(input, context)
+        candidates = self.candidates
         if len(candidates) > 0:
             self.updateOldDendrites(candidates, input, context)
         else:
@@ -44,6 +52,12 @@ class Cell(object):
             d.weaken(input, context)
             d.failureCount += 1
         self.pruneDendrites()
+
+    def updatePredOffActualOff(self, input, context):
+        for d in self.candidates:
+            d.decay(input, context)
+        self.pruneDendrites()
+        return True
 
     def findActiveDendrites(self, input, context):
         activeDendrites = []
@@ -70,10 +84,6 @@ class Cell(object):
         mean = total / (len(self.dendrites)+0.001)
         return mean
 
-    def updatePredOffActualOff(self, input, context):
-        # for d in self.dendrites:
-        #     d.decay()
-        return True
 
     def findCandidateDendrites(self, input, context):
         candidates = {aDend for aDend in self.dendrites if aDend.isCandidate(input,context)}
@@ -88,8 +98,8 @@ class Cell(object):
             self.removeWeakestDendrite()
         numInputSynapse = random.randint(int(len(input)/2), len(input))
         numContextSynapse = random.randint(int(len(context)/2), len(context))
-        inputSynapses = random.sample(input, numInputSynapse)
-        contextSynapses = random.sample(context, numContextSynapse)
+        inputSynapses = set(random.sample(input, numInputSynapse))
+        contextSynapses = set(random.sample(context, numContextSynapse))
         self.dendrites.append(Dendrite(inp=inputSynapses, context=contextSynapses))
         self.countAddDendrite += 1
 
@@ -100,7 +110,7 @@ class Cell(object):
         self.countPruneDendrite += 1
 
     def pruneDendrites(self):
-        for i  in reversed(range(len(self.dendrites))):
+        for i in reversed(range(len(self.dendrites))):
             if self.dendrites[i].hasNegativePermanence():
                 self.dendrites.pop(i)
                 self.countPruneDendrite += 1

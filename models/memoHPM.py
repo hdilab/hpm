@@ -1,4 +1,4 @@
-PRINT_INTERVAL = 1000
+PRINT_INTERVAL = 100
 
 import numpy as np
 from models.Cell import Cell
@@ -30,6 +30,7 @@ class memoHPM(object):
         self.context = set(random.sample(self.population, numOnBits))
 
         self.recalls = [0 for i in range(PRINT_INTERVAL)]
+        self.precisions = [0 for i in range(PRINT_INTERVAL)]
         self.activations = [0 for i in range(PRINT_INTERVAL)]
 
         self.iteration = 0
@@ -41,7 +42,8 @@ class memoHPM(object):
         buffer = []
         for i in range(4):
             self.actual = self.lower.feedSparse(feedback=self.pred, writer=writer)
-            self.context = self.context | feedback
+            self.context = self.context
+            # self.context = self.context | feedback
             self.pred = self.predict(self.prevActual, self.context)
             self.evaluate(self.pred, self.actual, writer)
             self.update(self.prevActual, self.context, writer=writer)
@@ -90,10 +92,13 @@ class memoHPM(object):
 
         self.recalls[self.iteration % PRINT_INTERVAL] = \
             self.getRecallError(target, pred)
+        self.precisions[self.iteration % PRINT_INTERVAL] = \
+            self.getPrecisionError(target, pred)
         self.activations[self.iteration % PRINT_INTERVAL] = len(pred)
 
         if self.iteration % PRINT_INTERVAL == 0:
             meanRecall = np.mean(self.recalls)
+            meanPrecision = np.mean(self.precisions)
             meanActivations = np.mean(self.activations)
             currentTestTime = time.time()
             trainTime = int(currentTestTime - self.startTime)
@@ -104,32 +109,33 @@ class memoHPM(object):
             successCountDendrites = np.array([c.getSuccessCountDendrites() for c in self.cells])
             failureCountDendrites = np.array([c.getFailureCountDendrites() for c in self.cells])
             addDendrites = np.array([c.countAddDendrite for c in self.cells])
-            countAddDendrites = np.mean(addDendrites)
+            countAddDendrites = np.sum(addDendrites)
             pruneDendrites = np.array([c.countPruneDendrite for c in self.cells])
-            countPruneDendrites = np.mean(pruneDendrites)
+            countPruneDendrites = np.sum(pruneDendrites)
             meanPredictionCountDendrites = np.mean(predictionCountDendrites)
-            meanSuccessCountDendrites = np.mean(successCountDendrites)
-            meanFailureCountDendrites = np.mean(failureCountDendrites)
+            meanSuccessCountDendrites = np.sum(successCountDendrites)
+            meanFailureCountDendrites = np.sum(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
             stdNumDendrites = np.std(numDendrites)
             for c in self.cells:
                 c.resetCount()
 
-
             print(self.name, \
                   " Iteration: ", self.iteration,
                   " Recall: ",  "{:.4f}".format(meanRecall),
+                  " Precision: ",  "{:.4f}".format(meanPrecision),
                   " muDendrites: ", "{:.1f}".format(meanNumDendrites),
                   " stdDendrites: ", "{:.1f}".format(stdNumDendrites),
                   " muAct: ", "{:.1f}".format(meanActivations),
                   " muPred: ", "{:.1f}".format(meanPredictionCountDendrites),
-                  " muSucc: ", "{:.3f}".format(meanSuccessCountDendrites),
-                  " muFail: ", "{:.3f}".format(meanFailureCountDendrites),
-                  " addDend: ", "{:.1f}".format(countAddDendrites),
-                  " pruneDend: ", "{:.1f}".format(countPruneDendrites),
+                  " muSucc: ", "{}".format(meanSuccessCountDendrites),
+                  " muFail: ", "{}".format(meanFailureCountDendrites),
+                  " addDend: ", "{}".format(countAddDendrites),
+                  " pruneDend: ", "{}".format(countPruneDendrites),
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
+            writer.add_scalar('precision/precision'+self.name, meanPrecision, self.iteration)
             writer.add_scalar('counts/meanDendrites'+self.name, meanNumDendrites, self.iteration)
             writer.add_scalar('counts/stdDendrites'+self.name, stdNumDendrites , self.iteration)
             writer.add_scalar('counts/meanActivations'+self.name, meanActivations, self.iteration)
@@ -149,6 +155,13 @@ class memoHPM(object):
     def getRecallError(target, pred):
         intersection = target & pred
         recall = len(intersection) / (len(target) + 0.0001)
+        # if recall > 0.99:
+        #     print("Hello ", self.name)
+        return recall
+    @staticmethod
+    def getPrecisionError(target, pred):
+        intersection = target & pred
+        recall = len(intersection) / (len(pred) + 0.0001)
         # if recall > 0.99:
         #     print("Hello ", self.name)
         return recall
