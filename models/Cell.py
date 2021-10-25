@@ -60,10 +60,12 @@ class Cell(object):
     def updatePredOffActualOff(self, input, context):
         for d in self.candidates:
             d.weaken(input, context)
+            d.failureCount += 1
         for d in self.babyDendrites:
             if d.isCandidate(input,context):
                 d.failureCount += 1
         self.pruneDendrites()
+        self.pruneBabyDendrites()
         return True
 
     def findActiveDendrites(self, input, context):
@@ -99,6 +101,7 @@ class Cell(object):
     def updateOldDendrites(self, dendrites, input, context):
         for d in dendrites:
             d.strengthen(input, context)
+            d.successCount += 1
 
     def addBabyDendrite(self, input, context):
         if len(self.babyDendrites) > MAX_NUM_BABYDENDRITES:
@@ -153,7 +156,8 @@ class Cell(object):
 
     def pruneDendrites(self):
         for i in reversed(range(len(self.dendrites))):
-            if self.dendrites[i].hasNegativePermanence():
+            aDend = self.dendrites[i]
+            if aDend.failureCount - aDend.successCount > 0:
                 self.dendrites.pop(i)
                 self.countPruneDendrite += 1
 

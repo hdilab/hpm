@@ -121,8 +121,8 @@ class memoHPM(object):
             meanFailureCountDendrites = np.mean(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
             stdNumDendrites = np.std(numDendrites)
-            for c in self.cells:
-                c.resetCount()
+            # for c in self.cells:
+            #     c.resetCount()
 
             print(self.name, \
                   " Iteration: ", self.iteration,

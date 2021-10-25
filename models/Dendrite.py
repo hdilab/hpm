@@ -66,7 +66,7 @@ class Dendrite(object):
 
     @staticmethod
     def populateSynapses(indexes):
-        synapses = [Synapse(permanence=random.uniform(0.4,0.5), target=i) for i in indexes]
+        synapses = [Synapse(permanence=random.uniform(0.5,0.8), target=i) for i in indexes]
         return synapses
 
     def sumPermanence(self):
