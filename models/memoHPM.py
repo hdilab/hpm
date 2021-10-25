@@ -105,16 +105,20 @@ class memoHPM(object):
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
             numDendrites = np.array([c.countDendrites() for c in self.cells])
-            predictionCountDendrites = np.array([c.getPredictionCountDendrites() for c  in self.cells])
+            numBabyDendrites = np.array([len(c.babyDendrites) for c in self.cells])
             successCountDendrites = np.array([c.getSuccessCountDendrites() for c in self.cells])
             failureCountDendrites = np.array([c.getFailureCountDendrites() for c in self.cells])
+            addBabyDendrites = np.array([c.countAddBabyDendrite for c in self.cells])
+            countAddBabyDendrites = np.mean(addBabyDendrites)
+            pruneBabyDendrites = np.array([c.countPruneBabyDendrite for c in self.cells])
+            countPruneBabyDendrites = np.mean(pruneBabyDendrites)
             addDendrites = np.array([c.countAddDendrite for c in self.cells])
-            countAddDendrites = np.sum(addDendrites)
+            countAddDendrites = np.mean(addDendrites)
             pruneDendrites = np.array([c.countPruneDendrite for c in self.cells])
-            countPruneDendrites = np.sum(pruneDendrites)
-            meanPredictionCountDendrites = np.mean(predictionCountDendrites)
-            meanSuccessCountDendrites = np.sum(successCountDendrites)
-            meanFailureCountDendrites = np.sum(failureCountDendrites)
+            countPruneDendrites = np.mean(pruneDendrites)
+            meanNumBabyDendrites = np.mean(numBabyDendrites)
+            meanSuccessCountDendrites = np.mean(successCountDendrites)
+            meanFailureCountDendrites = np.mean(failureCountDendrites)
             meanNumDendrites = np.mean(numDendrites)
             stdNumDendrites = np.std(numDendrites)
             for c in self.cells:
@@ -127,11 +131,13 @@ class memoHPM(object):
                   " muDendrites: ", "{:.1f}".format(meanNumDendrites),
                   " stdDendrites: ", "{:.1f}".format(stdNumDendrites),
                   " muAct: ", "{:.1f}".format(meanActivations),
-                  " muPred: ", "{:.1f}".format(meanPredictionCountDendrites),
-                  " muSucc: ", "{}".format(meanSuccessCountDendrites),
-                  " muFail: ", "{}".format(meanFailureCountDendrites),
-                  " addDend: ", "{}".format(countAddDendrites),
-                  " pruneDend: ", "{}".format(countPruneDendrites),
+                  " numBaby: ", "{:.1f}".format(meanNumBabyDendrites),
+                  " muSucc: ", "{:.1f}".format(meanSuccessCountDendrites),
+                  " muFail: ", "{:.1f}".format(meanFailureCountDendrites),
+                  " addBaby: ", "{:.1f}".format(countAddBabyDendrites),
+                  " pruneBaby: ", "{:.1f}".format(countPruneBabyDendrites),
+                  " addDend: ", "{:.1f}".format(countAddDendrites),
+                  " pruneDend: ", "{:.1f}".format(countPruneDendrites),
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
@@ -139,11 +145,13 @@ class memoHPM(object):
             writer.add_scalar('counts/meanDendrites'+self.name, meanNumDendrites, self.iteration)
             writer.add_scalar('counts/stdDendrites'+self.name, stdNumDendrites , self.iteration)
             writer.add_scalar('counts/meanActivations'+self.name, meanActivations, self.iteration)
-            writer.add_scalar('counts/muPred'+self.name, meanPredictionCountDendrites, self.iteration)
+            writer.add_scalar('counts/numBaby'+self.name, meanNumBabyDendrites, self.iteration)
             writer.add_scalar('counts/muSucc'+self.name, meanSuccessCountDendrites, self.iteration)
             writer.add_scalar('counts/muFail'+self.name, meanFailureCountDendrites, self.iteration)
             writer.add_scalar('counts/addDend'+self.name, countAddDendrites, self.iteration)
             writer.add_scalar('counts/pruneDend'+self.name, countPruneDendrites, self.iteration)
+            writer.add_scalar('counts/addBaby'+self.name, countAddBabyDendrites, self.iteration)
+            writer.add_scalar('counts/pruneBaby'+self.name, countPruneBabyDendrites, self.iteration)
             writer.add_histogram('hist/numDend' + self.name, numDendrites, self.iteration)
             writer.add_histogram('hist/numSucc' + self.name, successCountDendrites, self.iteration)
             writer.add_histogram('hist/numFail' + self.name, failureCountDendrites, self.iteration)
