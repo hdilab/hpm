@@ -42,8 +42,8 @@ class memoHPM(object):
         buffer = []
         for i in range(4):
             self.actual = self.lower.feedSparse(feedback=self.pred, writer=writer)
-            self.context = self.context
-            # self.context = self.context | feedback
+            # self.context = self.context
+            self.context = self.context | feedback
             self.pred = self.predict(self.prevActual, self.context)
             self.evaluate(self.pred, self.actual, writer)
             self.update(self.prevActual, self.context, writer=writer)
