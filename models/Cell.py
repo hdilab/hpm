@@ -126,12 +126,14 @@ class Cell(object):
 
     def checkBabies(self, input, context):
         candidates = []
-        for aDend in self.babyDendrites:
+        addIndexes = []
+        for i, aDend in enumerate(self.babyDendrites):
             if aDend.isCandidate(input, context):
                 aDend.successCount += 1
                 if aDend.predict(input, context):
                     if aDend.successCount - aDend.failureCount > 0:
                         self.addDendrite(aDend)
+                        addIndexes.append(i)
                 else:
                     candidates.append(aDend)
             # else:
@@ -140,7 +142,14 @@ class Cell(object):
             self.updateOldDendrites(candidates, input, context)
         else:
             self.addBabyDendrite(input, context)
+        self.removeDendrites(self.babyDendrites, addIndexes)
         self.pruneBabyDendrites()
+
+    def removeDendrites(dendrites, indexes):
+        for i in indexes.sort(reverse=True):
+            dendrites.pop(i)
+            
+            
 
     def removeWeakestBabyDendrite(self):
         values = [d.sumPermanence() for d in self.babyDendrites]
