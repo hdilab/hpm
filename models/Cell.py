@@ -145,8 +145,9 @@ class Cell(object):
         self.removeDendrites(self.babyDendrites, addIndexes)
         self.pruneBabyDendrites()
 
-    def removeDendrites(dendrites, indexes):
-        for i in indexes.sort(reverse=True):
+    def removeDendrites(self, dendrites, indexes):
+        sortedIndexes = sorted(indexes, reverse=True)
+        for i in sortedIndexes:
             dendrites.pop(i)
             
             
