@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #38
+- Layer-based Memoization
+
 ### Experiment #37
 - Memoization-based approach
 

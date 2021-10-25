@@ -71,17 +71,16 @@ class TXTFeeder(Feeder):
         self.char_list = [char for char in open(inputFileName).read()]
 
         self.char_sdr = SDR
-        self.readIndex = -1
+        self.readIndex = 0
 
     def feed(self, feedback=None, writer=None):
-        if self.readIndex < len(self.char_list)-1:
-            self.readIndex = self.readIndex + 1
-        else:
-            self.readIndex = -1
         inputChar = self.char_list[self.readIndex]
         sparseSDR = self.char_sdr.getNoisySDR(inputChar)
         inputSDR = self.char_sdr.getDenseFromSparse(sparseSDR)
-        return torch.tensor(inputSDR.T,dtype=torch.float32).to(device)
+        self.readIndex += 1
+        if self.readIndex >= len(self.char_list):
+            self.readIndex = 0
+        return inputSDR
 
     def feedSparse(self, feedback=None, writer=None):
         if self.readIndex < len(self.char_list) - 1:

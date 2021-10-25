@@ -54,6 +54,9 @@ class SDR(object):
         self.numBits = numBits
         self.inputNoise = inputNoise
         self.sdr_dict = {i:random.sample(self.population, numOnBits) for i in input_list}
+        self.sdrDense = np.zeros((len(input_list), numBits))
+        for i, c in enumerate(input_list):
+            self.sdrDense[i] = self.getDenseFromSparse(self.sdr_dict[c])
         self.inputList = input_list
 
 
@@ -68,9 +71,9 @@ class SDR(object):
         return inputSDR + noise
 
     def getDenseFromSparse(self, sparseInput):
-        dense = zeros(self.numBits)
-        dense[sparseInput] = 1
-        dense = dense.reshape(-1,1)
+        dense = zeros(self.numBits, dtype=bool)
+        dense[sparseInput] = True
+        # dense = dense.reshape(-1,1)
         return dense
 
     def getSparseFromDense(self, denseInput):
@@ -84,13 +87,9 @@ class SDR(object):
         Need to implement the function which returns the corresponding input from SDR
         This requires a probabilistic approach. Count the number of overlapping bit and nonoverlapping field.
         """
-        count = {i:0 for i in self.inputList }
-        sparseSDR = self.getSparseFromDense(denseSDR)[0]
-        for b in sparseSDR:
-            for c in self.inputList:
-                if b in self.sdr_dict[c]:
-                    count[c] += 1
-        prediction = max(count, key=count.get)
+        match = self.sdrDense @ denseSDR
+        maxIndex = np.argmax(match)
+        prediction = self.inputList[maxIndex]
         return prediction
 
     def getCollisionProb(self, n, a, s, theta):
@@ -111,10 +110,15 @@ class SDR(object):
 
         return numerator*1.0/denominator
 
+
     def getRandomSDR(self):
         noise = random.sample(self.population, self.numOnBits)
-        return set(noise)
+        return noise
 
+    def getRandomSDRDense(self):
+        randomSDR = self.getRandomSDR()
+        dense = self.getDenseFromSparse(randomSDR)
+        return dense
 
 def combinatorial(a,b):
     return factorial(a)*1.0/factorial(a-b)/factorial(a)
