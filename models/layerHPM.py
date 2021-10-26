@@ -159,7 +159,7 @@ class layerHPM(object):
             writer.add_scalar('counts/context'+self.name, meanNumContext, self.iteration)
             writer.add_scalar('counts/replace'+self.name, self.replaceCount , self.iteration)
             writer.add_histogram('hist/context' + self.name, numContext , self.iteration)
-            self.replaceCount = 0
+            # self.replaceCount = 0
 
 
     @staticmethod
