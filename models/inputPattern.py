@@ -1,7 +1,7 @@
 import numpy as np
 
 from models.contextPattern import contextPattern
-CONTEXT_MATCH_THRESHOLD = 20
+CONTEXT_MATCH_THRESHOLD = 33
 DEBUG = True
 
 class inputPattern(object):

@@ -4,7 +4,7 @@ import time
 import random
 random.seed(42)
 NUM_PATTERN = 1024
-MATCH_THRESHOLD = 40
+MATCH_THRESHOLD = 50
 DEBUG = True
 
 class layerHPM(object):
@@ -53,20 +53,33 @@ class layerHPM(object):
         buffer = np.zeros((self.feedbackFactor,self.numBits), dtype=bool)
         for i in range(self.feedbackFactor):
             self.actual = self.lower.feed(feedback=self.pred, writer=writer)
-            # self.context = self.context | feedback
+            self.context = feedback
             input = np.hstack((self.prevPrevActual, self.prevActual))
             self.pred = self.predict(input, self.context)
-            if DEBUG == True:
+            if DEBUG == True and self.name == 'L1':
                 charPrevInput = self.lower.char_sdr.getInput(self.prevPrevActual)
                 charInput = self.lower.char_sdr.getInput(self.prevActual)
                 charTarget = self.lower.char_sdr.getInput(self.actual)
                 charPred = self.lower.char_sdr.getInput(self.pred)
-                contextSum = self.context.nonzero()[0][:4]
+                charContext = self.analyzeContext(self.context)
                 numContext = np.array([len(p.contextPatterns) for p in self.patterns])
                 sumNumContext = np.sum(numContext)
-                if charPred != charTarget:
-                    print("Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
-                      charPrevInput, charInput, ', ', contextSum, ') -> ', charPred, ' for ', charTarget)
+                if charPred != charTarget or True:
+                    print("L1 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
+                      charPrevInput, charInput, ', ', charContext, ') -> ', charPred, ' for ', charTarget)
+
+            if DEBUG == True and self.name == 'L2':
+                charPrevInput = self.lower.analyzeContext(self.prevPrevActual)
+                charInput = self.lower.analyzeContext(self.prevActual)
+                charTarget = self.lower.analyzeContext(self.actual)
+                charPred = self.lower.analyzeContext(self.pred)
+                # charContext = self.analyzeContext(self.context)
+                numContext = np.array([len(p.contextPatterns) for p in self.patterns])
+                sumNumContext = np.sum(numContext)
+                if charPred != charTarget or True:
+                    print("L2 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
+                      charPrevInput, charInput, ', ', self.context.nonzero()[0][:4], ') -> ', charPred, ' for ', charTarget)
+
             self.evaluate(self.pred, self.actual, writer)
             self.update(input, self.context, self.actual, writer=writer)
             buffer[i] = self.prevPrevActual
@@ -74,8 +87,17 @@ class layerHPM(object):
             self.prevActual = self.actual
             self.iteration += 1
         poolOutput = self.pool(buffer, writer)
-        self.context = poolOutput
+        # self.context = poolOutput
         return poolOutput
+
+    def analyzeContext(self, context):
+        contextReshape = context.reshape((-1,1))
+        zeroPadding = np.zeros((self.numBits, self.feedbackFactor-1))
+        reconstruct = np.hstack((contextReshape, zeroPadding))
+        recon = reconstruct.flatten()
+        recon = np.split(recon,2)
+        charContext = [self.lower.char_sdr.getInput(r) for r in recon]
+        return charContext
 
     def predict(self, input, context):
         match = self.patternMatrix @ input
@@ -88,7 +110,7 @@ class layerHPM(object):
             self.patternMatrix[worstPattern.position] = input
             self.activePattern = worstPattern
             self.replaceCount += 1
-            if DEBUG:
+            if DEBUG and self.name == 'L1':
                 splitInput = np.split(input, 2)
                 prevPrevInput = splitInput[0]
                 prevInput = splitInput[1]
@@ -103,8 +125,14 @@ class layerHPM(object):
         return self.patterns[worst]
 
     def pool(self, buffer, writer):
+
+
         output = buffer.reshape((self.numBits, self.feedbackFactor))
         output = output[:,0]
+        if self.name == "L1" and DEBUG:
+            firstContext = self.lower.char_sdr.getInput(buffer[0])
+            secondContext = self.lower.char_sdr.getInput(buffer[1])
+            print("Context: ", firstContext, secondContext, " -> ", output.nonzero()[0][:4])
         # output = output.astype(bool)
         return output
 
