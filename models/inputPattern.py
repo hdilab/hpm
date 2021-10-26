@@ -47,7 +47,7 @@ class inputPattern(object):
             newContext = contextPattern(context=context)
             self.contextPatterns.append(newContext)
             self.activeContext = newContext
-            print("Context Pattern Added: Cell: ", self.position, " Contexts: ", len(self.contextPatterns))
+            # print("Context Pattern Added: Cell: ", self.position, " Contexts: ", len(self.contextPatterns))
         pred = self.activeContext.predict(context)
         return pred
 

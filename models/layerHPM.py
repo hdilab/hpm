@@ -36,6 +36,8 @@ class layerHPM(object):
 
         self.recalls = [0 for i in range(self.printInterval)]
         self.precisions = [0 for i in range(self.printInterval)]
+        self.originalRecalls = [0 for i in range(self.printInterval)]
+        self.originalPrecisions = [0 for i in range(self.printInterval)]
         self.accuracy = [0 for i in range(self.printInterval)]
         self.replaceCount = 0
 
@@ -102,26 +104,36 @@ class layerHPM(object):
         self.precisions[self.iteration % self.printInterval], self.recalls[self.iteration % self.printInterval] = \
             self.getPrecisionRecallError(target, pred)
 
+
+
         if self.name == 'L1':
             charTarget = self.lower.char_sdr.getInput(target)
             charPred = self.lower.char_sdr.getInput(pred)
+            originalTarget = self.lower.char_sdr.getSDR(charTarget)
+            originalTarget = self.lower.char_sdr.getDenseFromSparse(originalTarget)
+
+            self.originalPrecisions[self.iteration % self.printInterval], self.originalRecalls[
+                self.iteration % self.printInterval] = \
+                self.getPrecisionRecallError(originalTarget, pred)
 
             if charTarget == charPred:
                 self.accuracy[self.iteration % self.printInterval] = 1
-            else:
-                print("Error: Target ", charTarget, " Pred ",  charPred)
+            # else:
+            #     print("Error: Target ", charTarget, " Pred ",  charPred)
 
 
         if self.iteration % self.printInterval == 0:
             meanRecall = np.mean(self.recalls)
             meanPrecision = np.mean(self.precisions)
+            meanOriginalRecall = np.mean(self.originalRecalls)
+            meanOriginalPrecision = np.mean(self.originalPrecisions)
             meanAccuracy = np.mean(self.accuracy)
             currentTestTime = time.time()
             trainTime = int(currentTestTime - self.startTime)
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
             numContext = np.array([len(p.contextPatterns) for p in self.patterns])
-            meanNumContext = np.mean(numContext)
+            meanNumContext = np.sum(numContext)
 
 
 
@@ -130,13 +142,17 @@ class layerHPM(object):
 
             print(self.name, \
                   " Iteration: ", self.iteration,
-                  " Recall: ",  "{:.4f}".format(meanRecall),
-                  " Precision: ",  "{:.4f}".format(meanPrecision),
+                  " R: ",  "{:.4f}".format(meanRecall),
+                  " P: ",  "{:.4f}".format(meanPrecision),
+                  " Orig-R: ",  "{:.4f}".format(meanOriginalRecall),
+                  " Orig-P: ",  "{:.4f}".format(meanOriginalPrecision),
                   " Accuracy: ", "{:.4f}".format(meanAccuracy),
                   " Context: ", "{:.1f}".format(meanNumContext),
                   " Replace: ", "{}".format(self.replaceCount),
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
+            writer.add_scalar('recall/origRecall'+self.name, meanOriginalRecall, self.iteration)
+            writer.add_scalar('precision/origPrecision'+self.name, meanOriginalPrecision, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
             writer.add_scalar('precision/precision'+self.name, meanPrecision, self.iteration)
             writer.add_scalar('accuracy/accuracy'+self.name, meanAccuracy, self.iteration)
