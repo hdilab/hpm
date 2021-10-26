@@ -4,8 +4,8 @@ import time
 import random
 random.seed(42)
 NUM_PATTERN = 1024
-MATCH_THRESHOLD = 20
-
+MATCH_THRESHOLD = 40
+DEBUG = True
 
 class layerHPM(object):
     def __init__(self,
@@ -14,6 +14,7 @@ class layerHPM(object):
                  lower=None,
                  printInterval=100,
                  name="layer",
+                 feedbackFactor=4,
                  writer=None):
 
         super().__init__()
@@ -24,14 +25,16 @@ class layerHPM(object):
         self.name = name
         self.numBits = numBits
         self.numOnBits = numOnBits
+        self.feedbackFactor = feedbackFactor
 
-        self.patternMatrix = np.zeros((NUM_PATTERN,numBits))
+        self.patternMatrix = np.zeros((NUM_PATTERN,numBits*2))
         self.patterns = [inputPattern(position=i) for i in range(NUM_PATTERN)]
 
         population = range(numBits)
 
         self.pred = self.makeBinary(random.sample(population, numOnBits))
         self.context = self.makeBinary(random.sample(population, numOnBits))
+        self.prevPrevActual = self.lower.feed(feedback=self.pred, writer=writer)
         self.prevActual = self.lower.feed(feedback=self.pred, writer=writer)
 
         self.recalls = [0 for i in range(self.printInterval)]
@@ -47,20 +50,27 @@ class layerHPM(object):
         self.programStartTime = time.time()
 
     def feed(self, feedback={}, writer=None):
-        buffer = np.zeros((4,self.numBits), dtype=bool)
-        for i in range(4):
+        buffer = np.zeros((self.feedbackFactor,self.numBits), dtype=bool)
+        for i in range(self.feedbackFactor):
             self.actual = self.lower.feed(feedback=self.pred, writer=writer)
             # self.context = self.context | feedback
-            self.pred = self.predict(self.prevActual, self.context)
-            # charInput = self.lower.char_sdr.getInput(self.prevActual)
-            # charTarget = self.lower.char_sdr.getInput(self.actual)
-            # charPred = self.lower.char_sdr.getInput(self.pred)
-            # contextSum = self.context.nonzero()[0][:4]
-            # print("Iter: ", self.iteration, ' (input, context) -> pred for actual :  (',
-            #       charInput, ', ', contextSum, ') -> ', charPred, ' for ', charTarget)
+            input = np.hstack((self.prevPrevActual, self.prevActual))
+            self.pred = self.predict(input, self.context)
+            if DEBUG == True:
+                charPrevInput = self.lower.char_sdr.getInput(self.prevPrevActual)
+                charInput = self.lower.char_sdr.getInput(self.prevActual)
+                charTarget = self.lower.char_sdr.getInput(self.actual)
+                charPred = self.lower.char_sdr.getInput(self.pred)
+                contextSum = self.context.nonzero()[0][:4]
+                numContext = np.array([len(p.contextPatterns) for p in self.patterns])
+                sumNumContext = np.sum(numContext)
+                if charPred != charTarget:
+                    print("Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
+                      charPrevInput, charInput, ', ', contextSum, ') -> ', charPred, ' for ', charTarget)
             self.evaluate(self.pred, self.actual, writer)
-            self.update(self.prevActual, self.context, self.actual, writer=writer)
-            buffer[i] = self.prevActual
+            self.update(input, self.context, self.actual, writer=writer)
+            buffer[i] = self.prevPrevActual
+            self.prevPrevActual = self.prevActual
             self.prevActual = self.actual
             self.iteration += 1
         poolOutput = self.pool(buffer, writer)
@@ -78,7 +88,11 @@ class layerHPM(object):
             self.patternMatrix[worstPattern.position] = input
             self.activePattern = worstPattern
             self.replaceCount += 1
-            print("Replace Worst Pattern for ", self.lower.char_sdr.getInput(input), " Pos: ", worstPattern.position)
+            if DEBUG:
+                splitInput = np.split(input, 2)
+                prevPrevInput = splitInput[0]
+                prevInput = splitInput[1]
+                print("Replace Worst Pattern for ", self.lower.char_sdr.getInput(prevPrevInput), self.lower.char_sdr.getInput(prevInput), " Pos: ", worstPattern.position)
         newContext = context.astype(int)
         pred = self.activePattern.predict(input, newContext)
         return pred
@@ -89,7 +103,7 @@ class layerHPM(object):
         return self.patterns[worst]
 
     def pool(self, buffer, writer):
-        output = buffer.reshape((self.numBits, 4))
+        output = buffer.reshape((self.numBits, self.feedbackFactor))
         output = output[:,0]
         # output = output.astype(bool)
         return output

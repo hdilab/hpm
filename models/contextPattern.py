@@ -5,6 +5,8 @@ class contextPattern(object):
     def __init__(self,
                  numOnBit=40,
                  numBit=2048,
+                 predNumBit=2048,
+                 predNumOnBit=40,
                  context=None,
                  ):
 

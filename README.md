@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #39
+- add previous letter as context
+- use k=2 as feedback from higher layer
+
 ### Experiment #38
 - Layer-based Memoization
 

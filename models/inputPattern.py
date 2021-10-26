@@ -2,13 +2,13 @@ import numpy as np
 
 from models.contextPattern import contextPattern
 CONTEXT_MATCH_THRESHOLD = 20
+DEBUG = True
 
 class inputPattern(object):
     def __init__(self,
                  position=None,
-                 permanence=0.8,
-                 numBit=2048,
-                 numOnBit=40
+                 numBit=2048*2,
+                 numOnBit=40*2,
                  ):
 
         super().__init__()
@@ -26,7 +26,7 @@ class inputPattern(object):
 
     def replaceInput(self,input=None,context=None):
         self.input = input
-        newContext = contextPattern(context=context)
+        newContext = contextPattern(context=context, )
         self.contextPatterns = [newContext]
         self.inputHistory = input.astype(float)
         self.countUpdateInput = 0
@@ -47,7 +47,8 @@ class inputPattern(object):
             newContext = contextPattern(context=context)
             self.contextPatterns.append(newContext)
             self.activeContext = newContext
-            # print("Context Pattern Added: Cell: ", self.position, " Contexts: ", len(self.contextPatterns))
+            if DEBUG:
+                print("Context Pattern Added: Cell: ", self.position, " Contexts: ", len(self.contextPatterns))
         pred = self.activeContext.predict(context)
         return pred
 
