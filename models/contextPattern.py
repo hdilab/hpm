@@ -19,13 +19,6 @@ class contextPattern(object):
         self.countUpdateContext = 0
         self.countUpdateActual = 0
 
-    def replaceInput(self,
-                     input=None,
-                     context=None):
-        self.input = input
-        self.context = context
-        self.predictionCount = 0
-
     def matchContext(self, context):
         # match = np.logical_and(self.context, context).astype(int).sum()
         match = (self.context @ context).sum()
@@ -37,6 +30,7 @@ class contextPattern(object):
         pred = np.zeros_like(self.actualHistory, dtype=bool)
         pred[topk] = True
         return pred
+
 
     def updateContext(self, context):
         self.countUpdateContext += 1

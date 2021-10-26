@@ -117,7 +117,8 @@ if args.file == "NA":
              numOnBits=NumOnBits,
              lower=L1feeder,
              printInterval=args.print,
-             name="L1")
+             name="L1",
+             writer=writer)
 
     layers = [L1]
     lowerLayer = L1
@@ -127,7 +128,8 @@ if args.file == "NA":
                         numOnBits=NumOnBits,
                         lower=lowerLayer,
                         printInterval=args.print,
-                        name="L%s" % i)
+                        name="L%s" % i,
+                        writer=writer)
         layers.append(newLayer)
         lowerLayer = newLayer
 
