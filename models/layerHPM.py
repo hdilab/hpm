@@ -3,9 +3,10 @@ import numpy as np
 import time
 import random
 random.seed(42)
-NUM_PATTERN = 1024
-MATCH_THRESHOLD = 50
-DEBUG = True
+NUM_PATTERN = 4096
+MATCH_THRESHOLD = 40
+DEBUG = False
+DEBUG_ERROR_ONLY = False
 
 class layerHPM(object):
     def __init__(self,
@@ -33,7 +34,7 @@ class layerHPM(object):
         population = range(numBits)
 
         self.pred = self.makeBinary(random.sample(population, numOnBits))
-        self.context = self.makeBinary(random.sample(population, numOnBits))
+        context = self.makeBinary(random.sample(population, numOnBits))
         self.prevPrevActual = self.lower.feed(feedback=self.pred, writer=writer)
         self.prevActual = self.lower.feed(feedback=self.pred, writer=writer)
 
@@ -51,43 +52,46 @@ class layerHPM(object):
 
     def feed(self, feedback={}, writer=None):
         buffer = np.zeros((self.feedbackFactor,self.numBits), dtype=bool)
+        feedbackSplit = np.split(feedback, self.feedbackFactor)
+        if self.name == 'L1' and (DEBUG or DEBUG_ERROR_ONLY):
+            charContext = self.analyzeContext(feedback)
         for i in range(self.feedbackFactor):
-            self.actual = self.lower.feed(feedback=self.pred, writer=writer)
-            self.context = feedback
+            context = feedbackSplit[i]
             input = np.hstack((self.prevPrevActual, self.prevActual))
-            self.pred = self.predict(input, self.context)
-            if DEBUG == True and self.name == 'L1':
+            self.pred = self.predict(input, context)
+            self.actual = self.lower.feed(feedback=self.pred, writer=writer)
+
+            if ( DEBUG or DEBUG_ERROR_ONLY) and self.name == 'L1':
                 charPrevInput = self.lower.char_sdr.getInput(self.prevPrevActual)
                 charInput = self.lower.char_sdr.getInput(self.prevActual)
                 charTarget = self.lower.char_sdr.getInput(self.actual)
                 charPred = self.lower.char_sdr.getInput(self.pred)
-                charContext = self.analyzeContext(self.context)
                 numContext = np.array([len(p.contextPatterns) for p in self.patterns])
                 sumNumContext = np.sum(numContext)
-                if charPred != charTarget or True:
+                if charPred != charTarget and DEBUG_ERROR_ONLY:
                     print("L1 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
-                      charPrevInput, charInput, ', ', charContext, ') -> ', charPred, ' for ', charTarget)
+                      charPrevInput, charInput, ', ', charContext[i], ') -> ', charPred, ' for ', charTarget)
 
-            if DEBUG == True and self.name == 'L2':
+            if (DEBUG) and self.name == 'L2':
                 charPrevInput = self.lower.analyzeContext(self.prevPrevActual)
                 charInput = self.lower.analyzeContext(self.prevActual)
                 charTarget = self.lower.analyzeContext(self.actual)
                 charPred = self.lower.analyzeContext(self.pred)
-                # charContext = self.analyzeContext(self.context)
+                # charContext = self.analyzeContext(context)
                 numContext = np.array([len(p.contextPatterns) for p in self.patterns])
                 sumNumContext = np.sum(numContext)
-                if charPred != charTarget or True:
+                if charPred != charTarget and DEBUG_ERROR_ONLY:
                     print("L2 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
-                      charPrevInput, charInput, ', ', self.context.nonzero()[0][:4], ') -> ', charPred, ' for ', charTarget)
+                      charPrevInput, charInput, ', ', context.nonzero()[0][:4], ') -> ', charPred, ' for ', charTarget)
 
             self.evaluate(self.pred, self.actual, writer)
-            self.update(input, self.context, self.actual, writer=writer)
-            buffer[i] = self.prevPrevActual
+            self.update(input, context, self.actual, writer=writer)
+            buffer[i] = self.actual
             self.prevPrevActual = self.prevActual
             self.prevActual = self.actual
             self.iteration += 1
         poolOutput = self.pool(buffer, writer)
-        # self.context = poolOutput
+        # context = poolOutput
         return poolOutput
 
     def analyzeContext(self, context):
@@ -110,7 +114,7 @@ class layerHPM(object):
             self.patternMatrix[worstPattern.position] = input
             self.activePattern = worstPattern
             self.replaceCount += 1
-            if DEBUG and self.name == 'L1':
+            if DEBUG and self.name == 'L1' :
                 splitInput = np.split(input, 2)
                 prevPrevInput = splitInput[0]
                 prevInput = splitInput[1]

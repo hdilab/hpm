@@ -3,8 +3,8 @@ import numpy as np
 
 class contextPattern(object):
     def __init__(self,
-                 numOnBit=40,
-                 numBit=2048,
+                 numOnBit=20,
+                 numBit=1024,
                  predNumBit=2048,
                  predNumOnBit=40,
                  context=None,
@@ -13,9 +13,11 @@ class contextPattern(object):
         super().__init__()
 
         self.predictionCount = 0
-        self.actualHistory = np.zeros((numBit))
+        self.actualHistory = np.zeros((predNumBit))
         self.numOnBit = numOnBit
         self.numBit = numBit
+        self.predNumBit = predNumBit
+        self.predNumOnBit = predNumOnBit
         self.context = context
         self.contextHistory = self.context.astype(float)
         self.countUpdateContext = 0
@@ -27,7 +29,7 @@ class contextPattern(object):
         return match
 
     def predict(self, context):
-        k = -self.numOnBit
+        k = -self.predNumOnBit
         topk = np.argpartition(self.actualHistory, k)[k:]
         pred = np.zeros_like(self.actualHistory, dtype=bool)
         pred[topk] = True
