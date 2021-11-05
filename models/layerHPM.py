@@ -50,13 +50,21 @@ class layerHPM(object):
         self.startTime = time.time()
         self.programStartTime = time.time()
 
+        self.poolMask = self.buildPoolMask(self.feedbackFactor, self.numBits)
+
+    def buildPoolMask(self, numSignal, numBits):
+        eye = np.eye(numSignal)
+        repNum = int(np.ceil(numBits/numSignal))
+        mask = np.tile(eye, repNum)
+        mask = mask[:, :numBits]
+        return mask
+
     def feed(self, feedback={}, writer=None):
         buffer = np.zeros((self.feedbackFactor,self.numBits), dtype=bool)
-        feedbackSplit = np.split(feedback, self.feedbackFactor)
         if self.name == 'L1' and (DEBUG or DEBUG_ERROR_ONLY):
             charContext = self.analyzeContext(feedback)
         for i in range(self.feedbackFactor):
-            context = feedbackSplit[i]
+            context = feedback
             input = np.hstack((self.prevPrevActual, self.prevActual))
             self.pred = self.predict(input, context)
             self.actual = self.lower.feed(feedback=self.pred, writer=writer)
@@ -129,16 +137,9 @@ class layerHPM(object):
         return self.patterns[worst]
 
     def pool(self, buffer, writer):
-
-
-        output = buffer.reshape((self.numBits, self.feedbackFactor))
-        output = output[:,0]
-        if self.name == "L1" and DEBUG:
-            firstContext = self.lower.char_sdr.getInput(buffer[0])
-            secondContext = self.lower.char_sdr.getInput(buffer[1])
-            print("Context: ", firstContext, secondContext, " -> ", output.nonzero()[0][:4])
-        # output = output.astype(bool)
-        return output
+        output = buffer * self.poolMask
+        result = output.sum(axis=0)
+        return result
 
     def update(self, input, context, actual, writer=None):
         isMatrixChanged = self.activePattern.update(input, context, actual)
@@ -212,7 +213,7 @@ class layerHPM(object):
     def getPrecisionRecallError(target, pred):
         newTarget = target.astype(int)
         newPred = pred.astype(int)
-        intersection = (target & pred).astype(int)
+        intersection = (target * pred).astype(int)
         recall = intersection.sum() / (newTarget.sum()+ 0.0001)
         precision = intersection.sum() / (newPred.sum() + 0.0001)
         # if recall > 0.99:

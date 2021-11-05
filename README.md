@@ -8,6 +8,13 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #41
+- Change pooling to have similarity between shifted phrases
+
+
+### Experiment #40
+- Use of Cupy to accelerate Numpy with GPU
+
 ### Experiment #39
 - add previous letter as context
 - use k=2 as feedback from higher layer
