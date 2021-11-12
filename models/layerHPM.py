@@ -4,7 +4,7 @@ import time
 import random
 random.seed(42)
 NUM_PATTERN = 4096
-DEBUG = False
+DEBUG = True
 DEBUG_ERROR_ONLY = False
 
 class layerHPM(object):

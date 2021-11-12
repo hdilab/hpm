@@ -66,7 +66,7 @@ class inputPattern(object):
         if count > 10:
             count = 10
         self.inputHistory = ((count-1)*self.inputHistory + input)/ count
-        k = -self.numOnBit
+        k = -self.numOnBit * 2
         topk = np.argpartition(self.inputHistory,k)[k:]
         newInput = np.zeros_like(self.input, dtype=bool)
         newInput[topk] = True
