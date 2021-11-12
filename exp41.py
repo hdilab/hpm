@@ -150,5 +150,5 @@ for i in range(n_epochs):
         archive = {'layers': layers,
                    'randomSDR': randomSDR,
                    'L1feeder': L1feeder}
-        torch.save(archive, archiveFilePath)
+        # torch.save(archive, archiveFilePath)
 
