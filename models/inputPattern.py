@@ -1,7 +1,7 @@
 import numpy as np
 
 from models.contextPattern import contextPattern
-CONTEXT_MATCH_THRESHOLD = 8
+
 DEBUG = False
 
 class inputPattern(object):
@@ -9,11 +9,13 @@ class inputPattern(object):
                  position=None,
                  numBit=2048*2,
                  numOnBit=40*2,
+                 threshold=8
                  ):
 
         super().__init__()
 
         self.position=position
+        self.contextMatchThreshold = threshold
 
         self.predictionCount = 0
         self.inputHistory = np.zeros((numBit))
@@ -26,7 +28,7 @@ class inputPattern(object):
 
     def replaceInput(self,input=None,context=None):
         self.input = input
-        newContext = contextPattern(context=context, )
+        newContext = contextPattern(context=context, numBit=self.numBit, numOnBit=self.numOnBit )
         self.contextPatterns = [newContext]
         self.inputHistory = input.astype(float)
         self.countUpdateInput = 0
@@ -38,13 +40,14 @@ class inputPattern(object):
         if len(self.contextPatterns) > 0:
             matchContext = [cP.matchContext(context) for cP in self.contextPatterns]
             maxIndex = np.argmax(matchContext)
-            if matchContext[maxIndex] > CONTEXT_MATCH_THRESHOLD:
+            if matchContext[maxIndex] > self.contextMatchThreshold:
                 self.activeContext = self.contextPatterns[maxIndex]
                 isContextAvailable = True
 
         if not isContextAvailable:
 
-            newContext = contextPattern(context=context)
+            newContext = contextPattern(context=context, numOnBit=self.numOnBit)
+
             self.contextPatterns.append(newContext)
             self.activeContext = newContext
             if DEBUG:

@@ -4,7 +4,6 @@ import time
 import random
 random.seed(42)
 NUM_PATTERN = 4096
-MATCH_THRESHOLD = 40
 DEBUG = False
 DEBUG_ERROR_ONLY = False
 
@@ -16,6 +15,7 @@ class layerHPM(object):
                  printInterval=100,
                  name="layer",
                  feedbackFactor=4,
+                 contextThreshold=8,
                  writer=None):
 
         super().__init__()
@@ -29,7 +29,8 @@ class layerHPM(object):
         self.feedbackFactor = feedbackFactor
 
         self.patternMatrix = np.zeros((NUM_PATTERN,numBits*2))
-        self.patterns = [inputPattern(position=i) for i in range(NUM_PATTERN)]
+        self.patterns = [inputPattern(position=i, numBit=self.numBits, numOnBit=self.numOnBits, threshold=contextThreshold) for i in range(NUM_PATTERN)]
+        self.match_threshold = self.numOnBits
 
         population = range(numBits)
 
@@ -114,7 +115,7 @@ class layerHPM(object):
     def predict(self, input, context):
         match = self.patternMatrix @ input
         maxIndex = np.argmax(match)
-        if match[maxIndex] > MATCH_THRESHOLD:
+        if match[maxIndex] > self.match_threshold:
             self.activePattern = self.patterns[maxIndex]
         else:
             worstPattern = self.findWorstPattern()
