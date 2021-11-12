@@ -89,7 +89,7 @@ NumBits = 2048 * args.bits
 
 expName = versionName + args.name
 
-writer = SummaryWriter('../runs/' + expName + ' L' + str(n_layers) + ' ' + localtime, comment=expName)
+writer = SummaryWriter('../runs2/' + expName + ' L' + str(n_layers) + ' ' + localtime, comment=expName)
 os.makedirs('./save', exist_ok=True)
 archiveFilePath = './save/' + expName + ' L' + str(n_layers) + ' ' + localtime + '.pt'
 
