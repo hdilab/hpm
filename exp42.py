@@ -137,6 +137,7 @@ if args.file == "NA":
                         printInterval=args.print,
                         name="L%s" % i,
                         feedbackFactor=2,
+                        contextThreshold=8*args.bits,
                         writer=writer)
         layers.append(newLayer)
         lowerLayer = newLayer
