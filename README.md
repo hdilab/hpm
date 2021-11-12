@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #42
+- See the effect of the size of large NumBits and NumOnBits
+- Will use 2X and 4X version of EXP-41
+
 ### Experiment #41
 - Change pooling to have similarity between shifted phrases
 
