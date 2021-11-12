@@ -28,15 +28,14 @@ class layerHPM(object):
         self.numOnBits = numOnBits
         self.feedbackFactor = feedbackFactor
 
-        self.patternMatrix = np.zeros((NUM_PATTERN,numBits*2))
+        self.patternMatrix = np.zeros((NUM_PATTERN,numBits))
         self.patterns = [inputPattern(position=i, numBit=self.numBits, numOnBit=self.numOnBits, threshold=contextThreshold) for i in range(NUM_PATTERN)]
-        self.match_threshold = self.numOnBits
+        self.match_threshold = int(self.numOnBits/2)
 
         population = range(numBits)
 
         self.pred = self.makeBinary(random.sample(population, numOnBits))
         context = self.makeBinary(random.sample(population, numOnBits))
-        self.prevPrevActual = self.lower.feed(feedback=self.pred, writer=writer)
         self.prevActual = self.lower.feed(feedback=self.pred, writer=writer)
 
         self.recalls = [0 for i in range(self.printInterval)]
@@ -66,12 +65,11 @@ class layerHPM(object):
             charContext = self.analyzeContext(feedback)
         for i in range(self.feedbackFactor):
             context = feedback
-            input = np.hstack((self.prevPrevActual, self.prevActual))
+            input = self.prevActual
             self.pred = self.predict(input, context)
             self.actual = self.lower.feed(feedback=self.pred, writer=writer)
 
             if ( DEBUG or DEBUG_ERROR_ONLY) and self.name == 'L1':
-                charPrevInput = self.lower.char_sdr.getInput(self.prevPrevActual)
                 charInput = self.lower.char_sdr.getInput(self.prevActual)
                 charTarget = self.lower.char_sdr.getInput(self.actual)
                 charPred = self.lower.char_sdr.getInput(self.pred)
@@ -79,10 +77,9 @@ class layerHPM(object):
                 sumNumContext = np.sum(numContext)
                 if charPred != charTarget and DEBUG_ERROR_ONLY:
                     print("L1 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
-                      charPrevInput, charInput, ', ', charContext[i], ') -> ', charPred, ' for ', charTarget)
+                       charInput, ', ', charContext[i], ') -> ', charPred, ' for ', charTarget)
 
             if (DEBUG) and self.name == 'L2':
-                charPrevInput = self.lower.analyzeContext(self.prevPrevActual)
                 charInput = self.lower.analyzeContext(self.prevActual)
                 charTarget = self.lower.analyzeContext(self.actual)
                 charPred = self.lower.analyzeContext(self.pred)
@@ -91,12 +88,11 @@ class layerHPM(object):
                 sumNumContext = np.sum(numContext)
                 if charPred != charTarget and DEBUG_ERROR_ONLY:
                     print("L2 Iter: ", self.iteration, 'Pattern: ', self.replaceCount, ' Context: ', sumNumContext,  '(input[prev, curr], context) -> pred for actual :  ([',
-                      charPrevInput, charInput, ', ', context.nonzero()[0][:4], ') -> ', charPred, ' for ', charTarget)
+                       charInput, ', ', context.nonzero()[0][:4], ') -> ', charPred, ' for ', charTarget)
 
             self.evaluate(self.pred, self.actual, writer)
             self.update(input, context, self.actual, writer=writer)
             buffer[i] = self.actual
-            self.prevPrevActual = self.prevActual
             self.prevActual = self.actual
             self.iteration += 1
         poolOutput = self.pool(buffer, writer)
@@ -124,10 +120,8 @@ class layerHPM(object):
             self.activePattern = worstPattern
             self.replaceCount += 1
             if DEBUG and self.name == 'L1' :
-                splitInput = np.split(input, 2)
-                prevPrevInput = splitInput[0]
-                prevInput = splitInput[1]
-                print("Replace Worst Pattern for ", self.lower.char_sdr.getInput(prevPrevInput), self.lower.char_sdr.getInput(prevInput), " Pos: ", worstPattern.position)
+
+                print("Replace Worst Pattern for ", self.lower.char_sdr.getInput(input), " Pos: ", worstPattern.position)
         newContext = context.astype(int)
         pred = self.activePattern.predict(input, newContext)
         return pred
