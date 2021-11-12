@@ -46,7 +46,7 @@ class inputPattern(object):
 
         if not isContextAvailable:
 
-            newContext = contextPattern(context=context, numOnBit=self.numOnBit)
+            newContext = contextPattern(context=context, numBit=self.numBit, numOnBit=self.numOnBit)
 
             self.contextPatterns.append(newContext)
             self.activeContext = newContext
