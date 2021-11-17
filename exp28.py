@@ -56,7 +56,7 @@ parser.add_argument("-i", "--input",
                     default="data/5M-train.txt")
 parser.add_argument("-t", "--test",
                     help="input text file you want to use for testing",
-                    default="data/500K-test.txt")
+                    default="data/500K-10kS.txt")
 parser.add_argument("-n", "--name",
                     help="name of the experiment. ex) EXP-14-short",
                     default="EXP")
