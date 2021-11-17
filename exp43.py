@@ -49,7 +49,7 @@ parser.add_argument("-i", "--input",
                     default="data/10kP.txt")
 parser.add_argument("-t", "--test",
                     help="input text file you want to use for testing",
-                    default="data/500K-10kS.txt")
+                    default="data/500K-test.txt")
 parser.add_argument("-n", "--name",
                     help="name of the experiment. ex) EXP-14-short",
                     default="R1")
