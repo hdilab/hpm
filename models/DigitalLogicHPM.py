@@ -20,11 +20,11 @@ class DigitalLogicHPM(object):
         super().__init__()
         self.inputPattern = Pattern(numBits=numBits,
                                     numOnBits=numOnBits,
-                                    threhold=threshold)
+                                    threshold=threshold)
 
         self.contextPattern = Pattern(numBits=numBits,
                                     numOnBits=numOnBits,
-                                    threhold=threshold)
+                                    threshold=threshold)
 
         self.printInterval = printInterval
         self.lower = lower
@@ -81,11 +81,13 @@ class DigitalLogicHPM(object):
         if context not in self.logic[input]:
             self.logic[input][context] = 'UNK'
             pred = 'UNK'
+        elif self.logic[input][context] == 'UNK':
+            pred = 'UNK'
         else:
             pred = self.samplePred(self.logic[input][context])
         return pred
 
-    def pool(self, bufferIdx, writer):
+    def pool(self, bufferIdx):
         bufferSignal = np.zeros((self.feedbackFactor, self.numBits), dtype=bool)
         for i, idx in enumerate(bufferIdx):
             bufferSignal[i] = self.inputPattern.getSignal(idx)
@@ -143,33 +145,27 @@ class DigitalLogicHPM(object):
             trainTime = int(currentTestTime - self.startTime)
             totalTime = int((currentTestTime - self.programStartTime)/3600)
             self.startTime = currentTestTime
-            numContext = np.array([len(p.contextPatterns) for p in self.patterns])
-            meanNumContext = np.sum(numContext)
-
-
-
-            # for c in self.cells:
-            #     c.resetCount()
+            numInputs = len(self.inputPattern.counts)
+            numContexts = len(self.contextPattern.counts)
 
             print(self.name, \
                   " Iteration: ", self.iteration,
                   " R: ",  "{:.4f}".format(meanRecall),
-                  " P: ",  "{:.4f}".format(meanPrecision),
                   " Orig-R: ",  "{:.4f}".format(meanOriginalRecall),
-                  " Orig-P: ",  "{:.4f}".format(meanOriginalPrecision),
                   " Accuracy: ", "{:.4f}".format(meanAccuracy),
-                  " Context: ", "{:.1f}".format(meanNumContext),
-                  " Replace: ", "{}".format(self.replaceCount),
+                  "#Input: ", numInputs,
+                  "#Context: ", numContexts,
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
             writer.add_scalar('recall/origRecall'+self.name, meanOriginalRecall, self.iteration)
-            writer.add_scalar('precision/origPrecision'+self.name, meanOriginalPrecision, self.iteration)
+            # writer.add_scalar('precision/origPrecision'+self.name, meanOriginalPrecision, self.iteration)
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
-            writer.add_scalar('precision/precision'+self.name, meanPrecision, self.iteration)
+            # writer.add_scalar('precision/precision'+self.name, meanPrecision, self.iteration)
             writer.add_scalar('accuracy/accuracy'+self.name, meanAccuracy, self.iteration)
-            writer.add_scalar('counts/context'+self.name, meanNumContext, self.iteration)
-            writer.add_scalar('counts/replace'+self.name, self.replaceCount , self.iteration)
-            writer.add_histogram('hist/context' + self.name, numContext , self.iteration)
+            writer.add_scalar('counts/input'+self.name, numInputs , self.iteration)
+            writer.add_scalar('counts/context'+self.name, numContexts , self.iteration)
+            writer.add_histogram('hist/input' + self.name, np.array(self.inputPattern.counts) , self.iteration)
+            writer.add_histogram('hist/context' + self.name, np.array(self.contextPattern.counts) , self.iteration)
             # self.replaceCount = 0
 
 
