@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #44
+- Digital Logic Device with Noisy Components
+
 ### Experiment #43
 - Do not use prevprevInput 
 
