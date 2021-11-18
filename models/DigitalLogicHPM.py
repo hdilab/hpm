@@ -77,12 +77,14 @@ class DigitalLogicHPM(object):
                     charInput = self.lower.char_sdr.getInput(self.inputPattern.getSignal(self.prevInputIdx))
                 charTarget = self.lower.char_sdr.getInput(actualSignal)
                 charPred = self.lower.char_sdr.getInput(predSignal)
-                print("L1 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
+                if charPred != charTarget:
+                    print("L1 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
                        charInput, ' (', self.prevInputIdx, ') ,  ',  contextIdx,  ') -> ', charPred,
                       ' (', self.predIdx, ')  for ', charTarget, ' (', actualIdx, ')')
 
-            if DEBUG and self.name == 'L2':
-                print("L2 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
+            if DEBUG and self.name != 'L1':
+                if self.predIdx != actualIdx:
+                    print("L2 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
                        self.prevInputIdx, ', ', contextIdx ,') -> ', self.predIdx, ' for ', actualIdx)
             self.prevInputIdx = actualIdx
             self.iteration += 1
@@ -145,8 +147,8 @@ class DigitalLogicHPM(object):
 
             if charTarget == charPred:
                 self.accuracy[self.iteration % self.printInterval] = 1
-            # else:
-            #     print("Error: Target ", charTarget, " Pred ",  charPred)
+            else:
+                self.accuracy[self.iteration % self.printInterval] = 0
 
 
         if self.iteration % self.printInterval == 0:
