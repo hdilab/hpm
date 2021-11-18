@@ -160,7 +160,8 @@ class layerHPM(object):
 
             if charTarget == charPred:
                 self.accuracy[self.iteration % self.printInterval] = 1
-            # else:
+            else:
+                self.accuracy[self.iteration % self.printInterval] = 0
             #     print("Error: Target ", charTarget, " Pred ",  charPred)
 
 
