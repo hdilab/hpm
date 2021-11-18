@@ -4,7 +4,6 @@ import time
 import random
 random.seed(42)
 DEBUG = False
-DEBUG_ERROR_ONLY = False
 
 class DigitalLogicHPM(object):
     def __init__(self,
@@ -37,7 +36,7 @@ class DigitalLogicHPM(object):
 
         population = range(numBits)
 
-        self.prevInputIdx = 0
+        self.prevInputIdx = 'START'
 
         self.recalls = [0 for i in range(self.printInterval)]
         self.precisions = [0 for i in range(self.printInterval)]
@@ -70,6 +69,21 @@ class DigitalLogicHPM(object):
             self.evaluate(predSignal, actualSignal, writer)
             self.update(self.prevInputIdx, contextIdx, self.predIdx, actualIdx)
             bufferIdx.append(actualIdx)
+
+            if DEBUG and self.name == 'L1':
+                if self.prevInputIdx == 'START':
+                    charInput = 'START'
+                else:
+                    charInput = self.lower.char_sdr.getInput(self.inputPattern.getSignal(self.prevInputIdx))
+                charTarget = self.lower.char_sdr.getInput(actualSignal)
+                charPred = self.lower.char_sdr.getInput(predSignal)
+                print("L1 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
+                       charInput, ' (', self.prevInputIdx, ') ,  ',  contextIdx,  ') -> ', charPred,
+                      ' (', self.predIdx, ')  for ', charTarget, ' (', actualIdx, ')')
+
+            if DEBUG and self.name == 'L2':
+                print("L2 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
+                       self.prevInputIdx, ', ', contextIdx ,') -> ', self.predIdx, ' for ', actualIdx)
             self.prevInputIdx = actualIdx
             self.iteration += 1
         poolOutputSignal = self.pool(bufferIdx)
@@ -98,7 +112,7 @@ class DigitalLogicHPM(object):
     def update(self, prevInputIdx, contextIdx, predIdx, actualIdx):
         logicDict = self.logic[prevInputIdx][contextIdx]
         if predIdx == 'UNK':
-            logicDict = {actualIdx: 1}
+            self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
         else:
             if actualIdx in logicDict:
                 logicDict[actualIdx] += 1
@@ -108,7 +122,7 @@ class DigitalLogicHPM(object):
     def samplePred(self, logicDict):
         idxs = [k for k in logicDict.keys()]
         probs = np.array([logicDict[k] for k in idxs])
-        probs /= probs.sum()
+        probs = probs / probs.sum()
         pred = np.random.choice(idxs,p=probs)
         return pred
 
