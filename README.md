@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #46
+- Reintroduce prevprevInput
+
 ### Experiment #45
 - Check the effect of the context threshold
 - 
