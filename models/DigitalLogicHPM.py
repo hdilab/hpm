@@ -34,7 +34,7 @@ class DigitalLogicHPM(object):
 
         self.logic = {}
 
-        population = range(numBits)
+        self.population = [i for i in range(numBits)]
 
         self.prevInputIdx = 'START'
 
@@ -50,6 +50,7 @@ class DigitalLogicHPM(object):
         self.programStartTime = time.time()
 
         self.poolMask = self.buildPoolMask(self.feedbackFactor, self.numBits)
+        self.debug = {'countA':0, 'countASuccess':0}
 
     def buildPoolMask(self, numSignal, numBits):
         eye = np.eye(numSignal)
@@ -62,12 +63,11 @@ class DigitalLogicHPM(object):
         bufferIdx = []
         for i in range(self.feedbackFactor):
             contextIdx = self.contextPattern.getIdxAndUpdate(feedback)
-            self.predIdx = self.predict(self.prevInputIdx, contextIdx)
-            predSignal = self.inputPattern.getSignal(self.predIdx)
+            predSignal = self.predict(self.prevInputIdx, contextIdx)
             actualSignal = self.lower.feed(feedback=predSignal, writer=writer)
             actualIdx = self.inputPattern.getIdxAndUpdate(actualSignal)
             self.evaluate(predSignal, actualSignal, writer)
-            self.update(self.prevInputIdx, contextIdx, self.predIdx, actualIdx)
+            self.update(self.prevInputIdx, contextIdx, predSignal, actualIdx)
             bufferIdx.append(actualIdx)
 
             if DEBUG and self.name == 'L1':
@@ -77,10 +77,15 @@ class DigitalLogicHPM(object):
                     charInput = self.lower.char_sdr.getInput(self.inputPattern.getSignal(self.prevInputIdx))
                 charTarget = self.lower.char_sdr.getInput(actualSignal)
                 charPred = self.lower.char_sdr.getInput(predSignal)
+                if self.prevInputIdx == 0:
+                    self.debug['countA'] += 1
+                    if charPred == charTarget:
+                        self.debug['countASuccess'] +=1
+
                 if charPred != charTarget:
                     print("L1 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
                        charInput, ' (', self.prevInputIdx, ') ,  ',  contextIdx,  ') -> ', charPred,
-                      ' (', self.predIdx, ')  for ', charTarget, ' (', actualIdx, ')')
+                      ' for ', charTarget, ' (', actualIdx, ')')
 
             if DEBUG and self.name != 'L1':
                 if self.predIdx != actualIdx:
@@ -100,7 +105,10 @@ class DigitalLogicHPM(object):
         elif self.logic[input][context] == 'UNK':
             pred = 'UNK'
         else:
-            pred = self.samplePred(self.logic[input][context])
+            # pred = self.samplePred(self.logic[input][context])
+            # pred = self.maxPred(self.logic[input][context])
+            pred = self.weightPred(self.logic[input][context])
+
         return pred
 
     def pool(self, bufferIdx):
@@ -111,9 +119,9 @@ class DigitalLogicHPM(object):
         result = output.sum(axis=0)
         return result
 
-    def update(self, prevInputIdx, contextIdx, predIdx, actualIdx):
+    def update(self, prevInputIdx, contextIdx, predSignal, actualIdx):
         logicDict = self.logic[prevInputIdx][contextIdx]
-        if predIdx == 'UNK':
+        if type(predSignal) != np.ndarray:
             self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
         else:
             if actualIdx in logicDict:
@@ -128,7 +136,23 @@ class DigitalLogicHPM(object):
         pred = np.random.choice(idxs,p=probs)
         return pred
 
+    def maxPred(self, logicDict):
+        max_key = max(logicDict, key=logicDict.get)
+        return max_key
+
+    def weightPred(self, logicDict):
+        probs = np.ones(self.numBits) * 0.000000001
+        for idx,v in logicDict.items():
+            probs += self.inputPattern.getSignal(idx) * v
+        probs = probs / probs.sum()
+        sparseBinary = np.random.choice(self.population,self.numOnBits,replace=False,p=probs)
+        pred = self.makeBinary(sparseBinary)
+        return pred
+
     def evaluate(self, pred, target, writer):
+
+        if type(pred) != np.ndarray:
+            return
 
         self.precisions[self.iteration % self.printInterval], self.recalls[self.iteration % self.printInterval] = \
             self.getPrecisionRecallError(target, pred)
@@ -149,6 +173,7 @@ class DigitalLogicHPM(object):
                 self.accuracy[self.iteration % self.printInterval] = 1
             else:
                 self.accuracy[self.iteration % self.printInterval] = 0
+
 
 
         if self.iteration % self.printInterval == 0:
@@ -184,6 +209,8 @@ class DigitalLogicHPM(object):
             writer.add_histogram('hist/context' + self.name, np.array(self.contextPattern.counts) , self.iteration)
             # self.replaceCount = 0
 
+            if DEBUG:
+                print('A success rate: ', self.debug['countASuccess'] / (self.debug['countA'] + 1))
 
     @staticmethod
     def getPrecisionRecallError(target, pred):

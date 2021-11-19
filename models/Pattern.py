@@ -26,6 +26,8 @@ class Pattern(object):
         return dense
 
     def getIdxAndUpdate(self, signal):
+        if type(signal) != np.ndarray:
+            return 'UNK'
         if len(self.binaryMatrix) == 0 :
             self.binaryMatrix = signal.reshape((1,-1)).astype(int)
             self.continousMatrix = signal.reshape((1,-1)).astype(float)
