@@ -92,15 +92,16 @@ class DigitalLogicHPM(object):
                     print("L2 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
                        self.prevInputIdx, ', ', contextIdx ,') -> ', self.predIdx, ' for ', actualIdx)
             self.prevInputIdx = actualIdx
-            self.iteration += 1
+
         poolOutputSignal = self.pool(bufferIdx)
         return poolOutputSignal
 
     def predict(self, input, context):
         if input not in self.logic:
-            self.logic[input] = {}
-        if context not in self.logic[input]:
-            self.logic[input][context] = 'UNK'
+            pred = 'UNK'
+        elif context == 'UNK':
+            pred = 'UNK'
+        elif context not in self.logic[input]:
             pred = 'UNK'
         elif self.logic[input][context] == 'UNK':
             pred = 'UNK'
@@ -108,7 +109,6 @@ class DigitalLogicHPM(object):
             # pred = self.samplePred(self.logic[input][context])
             # pred = self.maxPred(self.logic[input][context])
             pred = self.weightPred(self.logic[input][context])
-
         return pred
 
     def pool(self, bufferIdx):
@@ -120,14 +120,21 @@ class DigitalLogicHPM(object):
         return result
 
     def update(self, prevInputIdx, contextIdx, predSignal, actualIdx):
-        logicDict = self.logic[prevInputIdx][contextIdx]
-        if type(predSignal) != np.ndarray:
+        if actualIdx == 'UNK' or contextIdx == 'UNK':
+            return
+        if prevInputIdx not in self.logic:
+            self.logic[prevInputIdx] = {}
+        if contextIdx not in self.logic[prevInputIdx]:
             self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
         else:
-            if actualIdx in logicDict:
-                logicDict[actualIdx] += 1
+            logicDict = self.logic[prevInputIdx][contextIdx]
+            if logicDict == 'UNK':
+                self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
             else:
-                logicDict[actualIdx] = 1
+                if actualIdx in logicDict:
+                    logicDict[actualIdx] += 1
+                else:
+                    logicDict[actualIdx] = 1
 
     def samplePred(self, logicDict):
         idxs = [k for k in logicDict.keys()]
@@ -211,6 +218,7 @@ class DigitalLogicHPM(object):
 
             if DEBUG:
                 print('A success rate: ', self.debug['countASuccess'] / (self.debug['countA'] + 1))
+        self.iteration += 1
 
     @staticmethod
     def getPrecisionRecallError(target, pred):
