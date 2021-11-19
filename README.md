@@ -8,6 +8,9 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #45
+- Check the effect of the context threshold
+- 
 ### Experiment #44
 - Digital Logic Device with Noisy Components
 

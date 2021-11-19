@@ -13,17 +13,18 @@ class DigitalLogicHPM(object):
                  printInterval=100,
                  name="layer",
                  feedbackFactor=4,
-                 threshold=8,
+                 inputThreshold=8,
+                 contextThreshold=10,
                  writer=None):
 
         super().__init__()
         self.inputPattern = Pattern(numBits=numBits,
                                     numOnBits=numOnBits,
-                                    threshold=threshold)
+                                    threshold=inputThreshold)
 
         self.contextPattern = Pattern(numBits=numBits,
                                     numOnBits=numOnBits,
-                                    threshold=threshold)
+                                    threshold=contextThreshold)
 
         self.printInterval = printInterval
         self.lower = lower
