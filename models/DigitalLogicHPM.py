@@ -37,7 +37,8 @@ class DigitalLogicHPM(object):
 
         self.population = [i for i in range(numBits)]
 
-        self.prevInputIdx = 'START'
+        self.prevInputIdx = 'S1'
+        self.prevprevInputIdx = 'S0'
 
         self.recalls = [0 for i in range(self.printInterval)]
         self.precisions = [0 for i in range(self.printInterval)]
@@ -64,11 +65,11 @@ class DigitalLogicHPM(object):
         bufferIdx = []
         for i in range(self.feedbackFactor):
             contextIdx = self.contextPattern.getIdxAndUpdate(feedback)
-            predSignal = self.predict(self.prevInputIdx, contextIdx)
+            predSignal = self.predict(self.prevprevInputIdx, self.prevInputIdx, contextIdx)
             actualSignal = self.lower.feed(feedback=predSignal, writer=writer)
             actualIdx = self.inputPattern.getIdxAndUpdate(actualSignal)
             self.evaluate(predSignal, actualSignal, writer)
-            self.update(self.prevInputIdx, contextIdx, predSignal, actualIdx)
+            self.update(self.prevprevInputIdx, self.prevInputIdx, contextIdx, predSignal, actualIdx)
             bufferIdx.append(actualIdx)
 
             if DEBUG and self.name == 'L1':
@@ -92,24 +93,29 @@ class DigitalLogicHPM(object):
                 if self.predIdx != actualIdx:
                     print("L2 Iter: ", self.iteration,  '(input, context) -> pred for actual :  (',
                        self.prevInputIdx, ', ', contextIdx ,') -> ', self.predIdx, ' for ', actualIdx)
+            self.prevprevInputIdx = self.prevInputIdx
             self.prevInputIdx = actualIdx
+
 
         poolOutputSignal = self.pool(bufferIdx)
         return poolOutputSignal
 
-    def predict(self, input, context):
-        if input not in self.logic:
+    def predict(self, prevInput, input, context):
+        if context == 'UNK':
             pred = 'UNK'
-        elif context == 'UNK':
+        elif prevInput not in self.logic:
             pred = 'UNK'
-        elif context not in self.logic[input]:
+        elif input not in self.logic[prevInput]:
             pred = 'UNK'
-        elif self.logic[input][context] == 'UNK':
+        elif context not in self.logic[prevInput][input]:
+            pred = 'UNK'
+        elif self.logic[prevInput][input][context] == 'UNK':
+            print("You should not see this!!!. Fix this in predict!!! ")
             pred = 'UNK'
         else:
             # pred = self.samplePred(self.logic[input][context])
             # pred = self.maxPred(self.logic[input][context])
-            pred = self.weightPred(self.logic[input][context])
+            pred = self.weightPred(self.logic[prevInput][input][context])
         return pred
 
     def pool(self, bufferIdx):
@@ -120,17 +126,20 @@ class DigitalLogicHPM(object):
         result = output.sum(axis=0)
         return result
 
-    def update(self, prevInputIdx, contextIdx, predSignal, actualIdx):
+    def update(self, prevprevInputIdx, prevInputIdx, contextIdx, predSignal, actualIdx):
         if actualIdx == 'UNK' or contextIdx == 'UNK':
             return
-        if prevInputIdx not in self.logic:
-            self.logic[prevInputIdx] = {}
-        if contextIdx not in self.logic[prevInputIdx]:
-            self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
+        if prevprevInputIdx not in self.logic:
+            self.logic[prevprevInputIdx] = {}
+        if prevInputIdx not in self.logic[prevprevInputIdx]:
+            self.logic[prevprevInputIdx][prevInputIdx] = {}
+        elif contextIdx not in self.logic[prevprevInputIdx][prevInputIdx]:
+            self.logic[prevprevInputIdx][prevInputIdx][contextIdx] = {actualIdx: 1}
         else:
-            logicDict = self.logic[prevInputIdx][contextIdx]
+            logicDict = self.logic[prevprevInputIdx][prevInputIdx][contextIdx]
             if logicDict == 'UNK':
-                self.logic[prevInputIdx][contextIdx] = {actualIdx: 1}
+                print("You should not see this!!! Fix this in update")
+                self.logic[prevprevInputIdx][prevInputIdx][contextIdx] = {actualIdx: 1}
             else:
                 if actualIdx in logicDict:
                     logicDict[actualIdx] += 1
