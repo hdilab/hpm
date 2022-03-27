@@ -3,10 +3,16 @@ Heterarchical Prediction Memory (HPM)
 
 
 ## Environment
-- python 2.7
+- python 3.8
 
 
 ## Experiment History
+
+### Experiment #48
+- Building skinner environment with Isaac Gym
+
+### Experiment #47
+- Pytorch tutorial on DQN 
 
 ### Experiment #46
 - Reintroduce prevprevInput
