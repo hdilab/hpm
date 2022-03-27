@@ -451,7 +451,7 @@ def optimize_model():
 # duration improvements.
 #
 
-num_episodes = 50
+num_episodes = 5000
 for i_episode in range(num_episodes):
     # Initialize the environment and state
     env.reset()
