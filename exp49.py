@@ -41,7 +41,7 @@ from torch.utils.tensorboard import SummaryWriter
 Seed = 42
 InputNoise = 0.1
 SaveInterval = 10000
-versionName = "EXP-44"
+versionName = "EXP-49"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
