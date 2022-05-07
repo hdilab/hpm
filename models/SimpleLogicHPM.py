@@ -61,8 +61,9 @@ class SimpleLogicHPM(object):
 
     def feed(self, feedback={}, writer=None):
         buffer = np.zeros((self.feedbackFactor, self.numBits), dtype=bool)
+        contextIdx = self.fetch(feedback, self.contextMem, self.contextCounter)
         for i in range(self.feedbackFactor):
-            contextIdx = self.fetch(feedback, self.contextMem, self.contextCounter)
+            
             predSignal = self.predict(self.prevInputIdx, contextIdx)
             actualSignal = self.lower.feed(feedback=predSignal, writer=writer)
             actualIdx = self.fetch(actualSignal, self.inputMem, self.inputCounter)
@@ -171,6 +172,9 @@ class SimpleLogicHPM(object):
                   " R: ",  "{:.4f}".format(meanRecall),
                   " Orig-R: ",  "{:.4f}".format(meanOriginalRecall),
                   " Accuracy: ", "{:.4f}".format(meanAccuracy),
+                  " Len Mem: ", len(self.predMem),
+                  " Len input: ", np.sum(self.inputCounter > 0 ),
+                  " Len context: ", np.sum(self.contextCounter > 0),
                   " Training Time: ", trainTime,
                   " Total Time: ", totalTime)
             writer.add_scalar('recall/origRecall'+self.name, meanOriginalRecall, self.iteration)
@@ -178,6 +182,9 @@ class SimpleLogicHPM(object):
             writer.add_scalar('recall/recall'+self.name, meanRecall, self.iteration)
             # writer.add_scalar('precision/precision'+self.name, meanPrecision, self.iteration)
             writer.add_scalar('accuracy/accuracy'+self.name, meanAccuracy, self.iteration)
+            writer.add_scalar('count/predMem' + self.name, len(self.predMem), self.iteration)
+            writer.add_scalar('count/inputMem' + self.name, np.sum(self.inputCounter > 0 ), self.iteration)
+            writer.add_scalar('count/contextMem' + self.name, np.sum(self.contextCounter >0 ), self.iteration)
 
             if DEBUG:
                 print('A success rate: ', self.debug['countASuccess'] / (self.debug['countA'] + 1))

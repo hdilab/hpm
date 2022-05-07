@@ -38,6 +38,24 @@
             "console": "integratedTerminal",
             "args": ["-l", "3", "-i", "data/10k.txt", "-p", "10000"],
             "justMyCode": true 
-        }
+        },
+        {
+            "name": "Exp 49 100",
+            "type": "python",
+            "request": "launch",
+            "program": "exp49.py",
+            "console": "integratedTerminal",
+            "args": ["-l", "3", "-i", "data/100.txt", "-p", "100"],
+            "justMyCode": true 
+        },
+        {
+            "name": "Exp 49 XABYWABZ",
+            "type": "python",
+            "request": "launch",
+            "program": "exp49.py",
+            "console": "integratedTerminal",
+            "args": ["-l", "3", "-i", "data/XABYWABZ.txt", "-p", "100"],
+            "justMyCode": true 
+        }  
     ]
 }

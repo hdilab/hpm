@@ -41,7 +41,7 @@ from torch.utils.tensorboard import SummaryWriter
 Seed = 42
 InputNoise = 0.1
 SaveInterval = 10000
-versionName = "EXP-49"
+versionName = "EXP-49-Threshold-10"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input",
@@ -83,11 +83,11 @@ parser.add_argument("-x", "--bits",
 parser.add_argument("-r", "--threshold",
                     type=int,
                     help="Match threshold",
-                    default="20")
+                    default="10")
 parser.add_argument("-m", "--numItems",
                     type=int,
                     help="Number items for Input and Context Buffer ",
-                    default="1000")
+                    default="4000")
 
 args = parser.parse_args()
 n_epochs = args.epoch # start smaller if you are just testing initial behavior
