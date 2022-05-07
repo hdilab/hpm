@@ -8,6 +8,10 @@ Heterarchical Prediction Memory (HPM)
 
 ## Experiment History
 
+### Experiment #49
+- Use the fixed number of input and context
+- Do not use prevprevInput
+
 ### Experiment #46
 - Reintroduce prevprevInput
 

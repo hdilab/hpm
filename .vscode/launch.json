@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Exp 49 abca",
+            "type": "python",
+            "request": "launch",
+            "program": "exp49.py",
+            "console": "integratedTerminal",
+            "args": ["-l", "2", "-i", "data/abca.txt"],
+            "justMyCode": true 
+        },
+        {
+            "name": "Exp 49 bcaa",
+            "type": "python",
+            "request": "launch",
+            "program": "exp49.py",
+            "console": "integratedTerminal",
+            "args": ["-l", "2", "-i", "data/bcaa.txt"],
+            "justMyCode": true 
+        },
+        {
+            "name": "Exp 49 10k",
+            "type": "python",
+            "request": "launch",
+            "program": "exp49.py",
+            "console": "integratedTerminal",
+            "args": ["-l", "3", "-i", "data/10k.txt", "-p", "10000"],
+            "justMyCode": true 
+        }
+    ]
+}
